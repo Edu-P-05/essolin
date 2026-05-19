@@ -2,51 +2,76 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>ESSOLIN - Login Test</title>
-</head>
-<body style="font-family: Arial, sans-serif; margin: 50px;">
-
-    <h2>Probar Login ESSOLIN</h2>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESSOLIN - Iniciar Sesión</title>
     
-    <input type="email" id="correo" placeholder="Correo electrónico"><br><br>
-    <input type="password" id="clave" placeholder="Contraseña"><br><br>
-    <button onclick="probarLogin()">Iniciar Sesión</button>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
 
-    <h3 id="resultado" style="color: blue;"></h3>
+    <div class="login-card">
+        <div class="login-header">
+            <h1>ESSOLIN</h1>
+            <p>Gestión de Operaciones</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="correo" class="form-control" placeholder="Correo electrónico" required>
+            </div>
+            
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="clave" class="form-control" placeholder="Contraseña" required>
+            </div>
+
+            <button type="submit" class="btn-login">
+                Iniciar Sesión <i class="fas fa-sign-in-alt" style="margin-left: 5px;"></i>
+            </button>
+
+            <div id="resultado"></div>
+        </form>
+    </div>
 
     <script>
-        function probarLogin() {
+        // === LÓGICA DE INICIO DE SESIÓN ===
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault(); 
+
             const email = document.getElementById('correo').value;
             const password = document.getElementById('clave').value;
+            const cajaResultado = document.getElementById('resultado');
 
-            // Se quitó la barra inicial '/' para que busque correctamente en la carpeta local  
+            cajaResultado.style.display = 'none';
+
             fetch('../php/login.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: email, password: password })
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error("Error en la petición al servidor");
-                }
+                if (!response.ok) throw new Error("Error en la comunicación con el servidor");
                 return response.json();
             })
             .then(data => {
-                document.getElementById('resultado').innerText = JSON.stringify(data);
-                
                 if(data.success) {
                     localStorage.setItem('usuarioNombre', data.nombre);
                     localStorage.setItem('usuarioRol', data.rol);
                     window.location.href = "dashboard.php";
                 } else {
-                    alert("Error: " + data.mensaje);
+                    cajaResultado.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.mensaje}`;
+                    cajaResultado.style.display = 'block';
                 }
             })
             .catch(error => {
                 console.error("Hubo un problema:", error);
-                alert("Error de comunicación con el servidor. Verifica que XAMPP esté corriendo.");
+                cajaResultado.innerHTML = `<i class="fas fa-plug"></i> Error de conexión. Verifica que XAMPP esté encendido.`;
+                cajaResultado.style.display = 'block';
             });
-        }
+        });
     </script>
 </body>
 </html>

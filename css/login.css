@@ -1,0 +1,101 @@
+/* Archivo: css/login.css */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Fondo de la pantalla de login (Azul corporativo ESSOLIN) */
+body {
+    background-color: #1a2b4c;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Tarjeta blanca central */
+.login-card {
+    background-color: #ffffff;
+    padding: 40px 30px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* Cabecera del Logo */
+.login-header {
+    margin-bottom: 30px;
+}
+.login-header h1 {
+    color: #4CAF50;
+    font-size: 2.2rem;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+.login-header p {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Campos del formulario */
+.form-group {
+    position: relative;
+    margin-bottom: 20px;
+    text-align: left;
+}
+.form-group i {
+    position: absolute;
+    top: 14px;
+    left: 15px;
+    color: #95a5a6;
+}
+.form-control {
+    width: 100%;
+    padding: 12px 15px 12px 40px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s;
+}
+.form-control:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+/* Botón de ingreso */
+.btn-login {
+    width: 100%;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px;
+    font-size: 1.1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s;
+    margin-top: 10px;
+}
+.btn-login:hover {
+    background-color: #45a049;
+}
+
+/* Mensaje de error */
+#resultado {
+    margin-top: 15px;
+    color: #e74c3c;
+    font-size: 0.9rem;
+    display: none;
+    background-color: #fadbd8;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #f5b7b1;
+}
