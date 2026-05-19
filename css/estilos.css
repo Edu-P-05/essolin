@@ -1,0 +1,432 @@
+/* ============================================================
+   ESSOLIN - Gestión Industrial Eléctrica
+   Archivo: estilos.css
+   Descripción: Todos los estilos visuales de la aplicación
+   ============================================================ */
+
+/* ----- RESET Y BASE ----- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body {
+    font-family: 'Inter', sans-serif;
+    background: #eef5fc;
+    color: #1a3b4f;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ============================================================
+   LOGIN
+   ============================================================ */
+.login-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(145deg, #cfe9ff 0%, #9ac2db 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    transition: opacity 0.4s ease;
+}
+.login-card {
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 48px;
+    width: 90%;
+    max-width: 450px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    border: 1px solid rgba(79,170,210,0.4);
+    text-align: center;
+}
+.login-card h1 {
+    font-size: 2.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #1976a5, #3fa7d0);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+.input-group {
+    text-align: left;
+    margin-bottom: 1rem;
+}
+.input-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f6d8c;
+    display: block;
+    margin-bottom: 4px;
+}
+.input-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 60px;
+    border: 1px solid #cae3f0;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+.login-btn {
+    background: #2c7da0;
+    width: 100%;
+    padding: 12px;
+    border-radius: 60px;
+    font-weight: bold;
+    font-size: 1rem;
+    color: white;
+    cursor: pointer;
+    border: none;
+    transition: background 0.2s;
+}
+.login-btn:hover { background: #1a5f7a; }
+.error-msg {
+    color: #c0392b;
+    font-size: 0.75rem;
+    margin-top: 8px;
+    min-height: 18px;
+}
+.credential-demo {
+    background: #e8f4fd;
+    padding: 12px;
+    border-radius: 20px;
+    margin-top: 16px;
+    font-size: 0.75rem;
+    color: #2c6a8c;
+}
+
+/* ============================================================
+   LAYOUT PRINCIPAL
+   ============================================================ */
+.app-wrapper {
+    display: none;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* ----- SIDEBAR ----- */
+.sidebar {
+    width: 280px;
+    background: #f9fdff;
+    border-right: 1px solid #cde3ef;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.sidebar-header {
+    padding: 28px 20px 16px 24px;
+    border-bottom: 1px solid #d9eaf3;
+}
+.sidebar-header h2 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #247ba0;
+}
+.sidebar-header p {
+    font-size: 0.78rem;
+    color: #4b6f86;
+    margin-top: 2px;
+}
+.nav-links {
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    border-radius: 40px;
+    font-weight: 600;
+    color: #2c6a8c;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.nav-item.active {
+    background: #cbe4f0;
+    color: #126e94;
+}
+.nav-item:hover { background: #e0f0f8; }
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #cde3ef;
+}
+.user-info {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.user-info strong { font-size: 0.9rem; }
+.user-info span { font-size: 0.75rem; color: #4b6f86; }
+.logout-sidebar {
+    background: #e2f0f7;
+    border: none;
+    padding: 8px;
+    border-radius: 32px;
+    width: 100%;
+    font-weight: 500;
+    cursor: pointer;
+    color: #1a5f7a;
+    transition: background 0.2s;
+}
+.logout-sidebar:hover { background: #c8dfe8; }
+
+/* ----- CONTENIDO PRINCIPAL ----- */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+    background: #eef5fc;
+}
+.page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+    border-left: 6px solid #3b9fd8;
+    padding-left: 20px;
+    color: #1a5f7a;
+}
+
+/* ============================================================
+   TARJETAS Y ESTADÍSTICAS
+   ============================================================ */
+.stats-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 28px;
+}
+.stat-card {
+    background: white;
+    border-radius: 28px;
+    padding: 18px 20px;
+    flex: 1;
+    min-width: 150px;
+    border: 1px solid #cde3ef;
+}
+.stat-number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #2c7da0;
+}
+.module-card {
+    background: white;
+    border-radius: 28px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    border: 1px solid #cde3ef;
+}
+.module-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a5f7a;
+    margin-bottom: 14px;
+}
+
+/* ============================================================
+   TABLA
+   ============================================================ */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th {
+    padding: 12px 8px;
+    border-bottom: 2px solid #cde3ef;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1f6d8c;
+    text-align: left;
+}
+td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #e2eff7;
+    font-size: 0.85rem;
+}
+
+/* ============================================================
+   BADGES DE ESTADO
+   ============================================================ */
+.badge {
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, opacity 0.2s;
+    display: inline-block;
+}
+.badge:hover { transform: scale(1.05); opacity: 0.9; }
+.bg-prog { background: #d9f0fa; color: #1f6d91; }
+.bg-proc { background: #fef0db; color: #c46e1a; }
+.bg-fin  { background: #dff0f9; color: #117a65; }
+
+/* ============================================================
+   EVIDENCIAS
+   ============================================================ */
+.evidence-img-grid {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+    justify-content: flex-start;
+}
+.evidence-card-img {
+    background: #f8fbfe;
+    border-radius: 24px;
+    padding: 12px;
+    text-align: center;
+    width: 210px;
+    border: 1px solid #cae0ec;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.evidence-card-img:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+.evidence-card-img img {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 16px;
+    background: #d4e3ec;
+}
+.evidence-card-img p {
+    margin-top: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+.evidence-card-img small { color: #4b6f86; }
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+.btn-primary {
+    background: #3282a7;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 40px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 16px;
+    margin-right: 12px;
+    transition: background 0.2s;
+}
+.btn-primary:hover { background: #1f6d8c; }
+.btn-secondary {
+    background: #a0c4d9;
+    color: #1a5f7a;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 40px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 16px;
+    margin-right: 12px;
+    transition: background 0.2s;
+}
+.btn-secondary:hover { background: #88b5cb; }
+.btn-download {
+    background: #3282a7;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 40px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 16px;
+    margin-right: 12px;
+    transition: background 0.2s;
+}
+.btn-download:hover { background: #1f6d8c; }
+
+/* ============================================================
+   FORMULARIO
+   ============================================================ */
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+.form-group {
+    flex: 1;
+    min-width: 180px;
+}
+.form-group label {
+    font-weight: 600;
+    font-size: 0.8rem;
+    display: block;
+    margin-bottom: 6px;
+    color: #1f6d8c;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 28px;
+    border: 1px solid #cde3ef;
+    background: #fefefe;
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+.form-group textarea { border-radius: 16px; resize: vertical; }
+
+/* ============================================================
+   GRÁFICOS
+   ============================================================ */
+.dashboard-charts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: center;
+    margin: 20px 0;
+}
+.chart-box {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 16px;
+    flex: 1;
+    min-width: 220px;
+    text-align: center;
+}
+.chart-box p {
+    font-size: 0.8rem;
+    color: #4b6f86;
+    margin-top: 8px;
+}
+canvas { max-height: 200px; width: 100%; }
+
+/* ============================================================
+   NAVEGACIÓN DE PANELES
+   ============================================================ */
+.page-panel { display: none; }
+.page-panel.active-panel { display: block; }
+
+/* Íconos de acción en tabla */
+.action-icon {
+    cursor: pointer;
+    margin: 0 6px;
+    color: #2f86ae;
+    transition: color 0.2s;
+}
+.action-icon:hover { color: #1a5f7a; }
+.estado-selector { cursor: pointer; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 780px) {
+    .sidebar { width: 240px; }
+    .main-content { padding: 20px; }
+    .stats-grid { gap: 10px; }
+    .stat-number { font-size: 1.6rem; }
+}

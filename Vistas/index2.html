@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ESSOLIN - Login Test</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 50px;">
+
+    <h2>Probar Login ESSOLIN</h2>
+    
+    <input type="email" id="correo" placeholder="Correo electrónico"><br><br>
+    <input type="password" id="clave" placeholder="Contraseña"><br><br>
+    <button onclick="probarLogin()">Iniciar Sesión</button>
+
+    <h3 id="resultado" style="color: blue;"></h3>
+
+    <script>
+        function probarLogin() {
+            const email = document.getElementById('correo').value;
+            const password = document.getElementById('clave').value;
+
+            // Se quitó la barra inicial '/' para que busque correctamente en la carpeta local  
+            fetch('../php/login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email, password: password })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Error en la petición al servidor");
+                }
+                return response.json();
+            })
+            .then(data => {
+                document.getElementById('resultado').innerText = JSON.stringify(data);
+                
+                if(data.success) {
+                    localStorage.setItem('usuarioNombre', data.nombre);
+                    localStorage.setItem('usuarioRol', data.rol);
+                    window.location.href = "dashboard.php";
+                } else {
+                    alert("Error: " + data.mensaje);
+                }
+            })
+            .catch(error => {
+                console.error("Hubo un problema:", error);
+                alert("Error de comunicación con el servidor. Verifica que XAMPP esté corriendo.");
+            });
+        }
+    </script>
+</body>
+</html>

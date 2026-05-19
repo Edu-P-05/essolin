@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>ESSOLIN | Gestión Industrial Eléctrica</title>
+    <!-- Íconos y fuentes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Estilos -->
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<!-- =====================================================
+     LOGIN
+===================================================== -->
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+        <h1>ESSOLIN</h1>
+        <div style="margin-bottom:1rem; font-size:0.85rem; color:#4b6f86;">
+            ESTIMULADA POR SOCIEDAD DE INDUSTRIAS
+        </div>
+
+        <div class="input-group">
+            <label>Correo</label>
+            <input type="email" id="loginEmail" value="admin@essolin.com">
+        </div>
+        <div class="input-group">
+            <label>Contraseña</label>
+            <input type="password" id="loginPassword" value="Admin123!">
+        </div>
+
+        <button class="login-btn" id="doLoginBtn">
+            <i class="fas fa-sign-in-alt"></i> Ingresar
+        </button>
+        <div id="loginError" class="error-msg"></div>
+
+        <div class="credential-demo">
+            <i class="fas fa-key"></i> admin@essolin.com / Admin123!
+        </div>
+    </div>
+</div>
+
+<!-- =====================================================
+     APP PRINCIPAL
+===================================================== -->
+<div id="appWrapper" class="app-wrapper">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div>
+            <div class="sidebar-header">
+                <h2>ESSOLIN</h2>
+                <p>Gestión de Operaciones Eléctricas</p>
+            </div>
+            <nav class="nav-links">
+                <div class="nav-item" data-page="inicio">
+                    <i class="fas fa-tachometer-alt"></i> <span>Inicio</span>
+                </div>
+                <div class="nav-item" data-page="trabajos">
+                    <i class="fas fa-clipboard-list"></i> <span>Trabajos</span>
+                </div>
+                <div class="nav-item" data-page="registro">
+                    <i class="fas fa-plus-circle"></i> <span>Registro Trabajo</span>
+                </div>
+                <div class="nav-item" data-page="evidencias">
+                    <i class="fas fa-bolt"></i> <span>Evidencias Eléctricas</span>
+                </div>
+                <div class="nav-item" data-page="reportes">
+                    <i class="fas fa-chart-line"></i> <span>Reportes</span>
+                </div>
+                <div class="nav-item" data-page="usuarios">
+                    <i class="fas fa-users"></i> <span>Usuarios</span>
+                </div>
+            </nav>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <i class="fas fa-user-circle fa-2x" style="color:#2c7da0;"></i>
+                <div>
+                    <strong id="sidebarUserName">Admin</strong><br>
+                    <span>Supervisor</span>
+                </div>
+            </div>
+            <button id="logoutSidebarBtn" class="logout-sidebar">
+                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+            </button>
+        </div>
+    </div><!-- /sidebar -->
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="main-content">
+
+        <!-- INICIO (Dashboard) -->
+        <div id="page-inicio" class="page-panel active-panel">
+            <div class="page-title"><i class="fas fa-chart-simple"></i> Panel ESSOLIN</div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProgramadosInicio">0</div>
+                    <div>Programados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEnProcesoInicio">0</div>
+                    <div>En Proceso</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalFinalizadosInicio">0</div>
+                    <div>Finalizados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalObservadosInicio">0</div>
+                    <div>Observados</div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <h3>Actividades Recientes</h3>
+                <ul style="margin-left:20px; line-height:2;">
+                    <li>⚡ Supervisión Planta Sur</li>
+                    <li>📄 Validación documental</li>
+                    <li>📸 Registro fotográfico campo</li>
+                    <li>🔧 Incidencia eléctrica</li>
+                </ul>
+            </div>
+
+            <div class="module-card">
+                <h3><i class="fas fa-chart-pie"></i> Distribución de Trabajos</h3>
+                <div style="height:240px; max-width:400px; margin:0 auto;">
+                    <canvas id="homeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRABAJOS -->
+        <div id="page-trabajos" class="page-panel">
+            <div class="page-title">
+                <i class="fas fa-briefcase"></i> Gestión de Trabajos
+                <span style="font-size:0.75rem; font-weight:400; color:#4b6f86; margin-left:12px;">
+                    Clic en el estado para cambiarlo
+                </span>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-number" id="statsProg">0</div><div>Programados</div></div>
+                <div class="stat-card"><div class="stat-number" id="statsProc">0</div><div>En Proceso</div></div>
+                <div class="stat-card"><div class="stat-number" id="statsFin">0</div><div>Finalizados</div></div>
+                <div class="stat-card"><div class="stat-number" id="statsObs">0</div><div>Observados</div></div>
+            </div>
+
+            <div class="module-card">
+                <h3>Listado de Trabajos</h3>
+                <div style="overflow-x:auto;">
+                    <table id="tablaTrabajosPrincipal">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Actividad</th>
+                                <th>Ubicación</th>
+                                <th>Estado (clic)</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- REGISTRO DE TRABAJO -->
+        <div id="page-registro" class="page-panel">
+            <div class="page-title"><i class="fas fa-edit"></i> Registro de Trabajo</div>
+
+            <div class="module-card">
+                <form id="formNuevoTrabajo">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo de Actividad</label>
+                            <select id="tipoActividad" required>
+                                <option>Mantenimiento eléctrico</option>
+                                <option>Reparación de cableado</option>
+                                <option>Instalación de tableros</option>
+                                <option>Diagnóstico de fallas eléctricas</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Ubicación</label>
+                            <select id="ubicacion" required>
+                                <option>Planta Sur</option>
+                                <option>Planta Norte</option>
+                                <option>Taller Central</option>
+                                <option>Subestación</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha</label>
+                            <input type="date" id="fechaTrabajo" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cuadrilla</label>
+                            <select id="cuadrilla">
+                                <option>Alpha</option>
+                                <option>Beta</option>
+                                <option>Gamma</option>
+                                <option>Delta</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Supervisor</label>
+                            <select id="supervisor">
+                                <option>Luis Pérez</option>
+                                <option>Ana Gómez</option>
+                                <option>Carlos Torres</option>
+                                <option>Elena Vargas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Observaciones</label>
+                        <textarea id="observaciones" rows="3"
+                            placeholder="Escriba aquí las observaciones técnicas..."></textarea>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> Guardar Trabajo
+                        </button>
+                        <button type="button" id="cancelarRegistro" class="btn-secondary">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- EVIDENCIAS -->
+        <div id="page-evidencias" class="page-panel">
+            <div class="page-title">
+                <i class="fas fa-bolt"></i> Evidencias de Campo - Cuadrillas Eléctricas
+            </div>
+            <div class="module-card">
+                <div class="evidence-img-grid" id="evidenciasImagenesGrid"></div>
+                <button id="downloadEvidenciasBtn" class="btn-download">
+                    <i class="fas fa-download"></i> Descargar CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- REPORTES -->
+        <div id="page-reportes" class="page-panel">
+            <div class="page-title"><i class="fas fa-chart-pie"></i> Reporte Operativo</div>
+            <div class="module-card">
+                <div class="stats-grid">
+                    <div class="stat-card"><div class="stat-number" id="repProg">0</div><div>Programados</div></div>
+                    <div class="stat-card"><div class="stat-number" id="repProc">0</div><div>En Proceso</div></div>
+                    <div class="stat-card"><div class="stat-number" id="repFin">0</div><div>Finalizados</div></div>
+                </div>
+                <div class="dashboard-charts">
+                    <div class="chart-box">
+                        <canvas id="doughnutChart"></canvas>
+                        <p>Distribución por estado</p>
+                    </div>
+                    <div class="chart-box">
+                        <canvas id="barChartTrabajos"></canvas>
+                        <p>Eficiencia / Cumplimiento</p>
+                    </div>
+                </div>
+                <button id="downloadReportBtn" class="btn-download">
+                    <i class="fas fa-file-csv"></i> Exportar reporte CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- USUARIOS -->
+        <div id="page-usuarios" class="page-panel">
+            <div class="page-title"><i class="fas fa-users"></i> Gestión de Usuarios</div>
+            <div class="module-card">
+                <div style="overflow-x:auto;">
+                    <table id="tablaUsuarios">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Correo</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaUsuariosBody"></tbody>
+                    </table>
+                </div>
+                <button id="exportUsersBtn" class="btn-download">
+                    <i class="fas fa-download"></i> Exportar usuarios
+                </button>
+            </div>
+        </div>
+
+    </div><!-- /main-content -->
+</div><!-- /appWrapper -->
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Lógica de la app -->
+<script src="js/app.js"></script>
+</body>
+</html>

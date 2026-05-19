@@ -1,0 +1,45 @@
+<?php
+require_once 'conexion.php'; // Asegúrate de que la ruta sea correcta
+
+// Leer datos enviados desde el formulario de login (JSON)
+$datos = json_decode(file_get_contents('php://input'), true);
+
+$email    = trim($datos['email']    ?? '');
+$password = trim($datos['password'] ?? '');
+
+// Validación básica de campos
+if (empty($email) || empty($password)) {
+    echo json_encode(["success" => false, "mensaje" => "Correo y contraseña son obligatorios."]);
+    exit;
+}
+
+// Buscar usuario en la base de datos cruzando la tabla usuarios y roles
+$pdo  = getConexion();
+$stmt = $pdo->prepare("
+    SELECT u.id_usuario, u.nombre_completo, u.password, r.nombre_rol 
+    FROM usuarios u
+    INNER JOIN roles r ON u.id_rol = r.id_rol
+    WHERE u.email = ? LIMIT 1
+");
+$stmt->execute([$email]);
+$usuario = $stmt->fetch();
+
+if (!$usuario) {
+    echo json_encode(["success" => false, "mensaje" => "Usuario no encontrado."]);
+    exit;
+}
+
+// Verificar contraseña (hash bcrypt guardado en BD)
+if (!password_verify($password, $usuario['password'])) {
+    echo json_encode(["success" => false, "mensaje" => "Contraseña incorrecta."]);
+    exit;
+}
+
+// Login exitoso
+echo json_encode([
+    "success" => true,
+    "nombre"  => $usuario['nombre_completo'],
+    "rol"     => $usuario['nombre_rol'],
+    "mensaje" => "Bienvenido, " . $usuario['nombre_completo']
+]);
+?>
