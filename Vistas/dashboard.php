@@ -1,21 +1,19 @@
 <?php
 session_start(); // Inicia el motor de sesiones
 
-// Si el usuario no tiene su "gafete" de sesión iniciada, lo devolvems al login
+// Si el usuario no tiene su "gafete" de sesión iniciada, lo devolvemos al login
 if (!isset($_SESSION['usuario_logueado'])) {
     header("Location: index2.html");
     exit; // Detiene la carga del resto de la página por seguridad
 }
 ?>
 <!DOCTYPE html>
-
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESSOLIN - Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f7f6; color: #333; }
@@ -88,11 +86,43 @@ if (!isset($_SESSION['usuario_logueado'])) {
 
     <div class="main-content">
         <div id="page-inicio" class="page-panel active-panel">
-            <div class="page-title"><i class="fas fa-chart-simple"></i> Panel ESSOLIN</div>
+            <div class="page-title"><i class="fas fa-chart-simple"></i> Panel Principal ESSOLIN</div>
+            
             <div class="stats-grid">
-                <div class="stat-card"><div class="stat-number">12</div><div>Programados</div></div>
-                <div class="stat-card"><div class="stat-number">5</div><div>En Proceso</div></div>
-                <div class="stat-card"><div class="stat-number">28</div><div>Finalizados</div></div>
+                <div class="stat-card" style="border-left: 5px solid #0c5460;">
+                    <div class="stat-number" id="dash-prog" style="color: #0c5460;">0</div>
+                    <div style="font-weight: bold; color: #555;">Programados</div>
+                </div>
+                <div class="stat-card" style="border-left: 5px solid #856404;">
+                    <div class="stat-number" id="dash-proc" style="color: #856404;">0</div>
+                    <div style="font-weight: bold; color: #555;">En Proceso</div>
+                </div>
+                <div class="stat-card" style="border-left: 5px solid #155724;">
+                    <div class="stat-number" id="dash-fin" style="color: #155724;">0</div>
+                    <div style="font-weight: bold; color: #555;">Finalizados</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
+                <div class="module-card" style="flex: 1; min-width: 300px;">
+                    <h3 style="margin-bottom: 15px; color: #1a2b4c; text-align: center;">Distribución Operativa</h3>
+                    <div style="position: relative; height:250px; width:100%; display: flex; justify-content: center;">
+                        <canvas id="graficoEstados"></canvas>
+                    </div>
+                </div>
+                <div class="module-card" style="flex: 2; min-width: 400px;">
+                    <h3 style="margin-bottom: 15px; color: #1a2b4c;">Trabajos por Tipo de Actividad</h3>
+                    <div style="position: relative; height:250px; width:100%;">
+                        <canvas id="graficoActividades"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="module-card">
+                <h3 style="margin-bottom: 15px; color: #1a2b4c;"><i class="fas fa-camera-retro"></i> Últimas Evidencias Registradas</h3>
+                <div id="dashFotosRecientes" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
+                    <p style="color: #888; font-style: italic;">Cargando fotografías recientes...</p>
+                </div>
             </div>
         </div>
 
@@ -193,166 +223,8 @@ if (!isset($_SESSION['usuario_logueado'])) {
     </div>
 </div>
 
-<script>
-    // === LÓGICA DE NAVEGACIÓN ===
-    const navItems = document.querySelectorAll('.nav-item');
-    const pagePanels = document.querySelectorAll('.page-panel');
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../js/Dashboard.js"></script>
 
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            navItems.forEach(nav => nav.classList.remove('active'));
-            pagePanels.forEach(panel => panel.classList.remove('active-panel'));
-            item.classList.add('active');
-            const targetPage = item.getAttribute('data-page');
-            document.getElementById('page-' + targetPage).classList.add('active-panel');
-
-            if (targetPage === 'trabajos') { cargarTrabajosAlMuro(); } 
-            else if (targetPage === 'evidencias') { cargarSelectTrabajos(); cargarGaleriaEvidencias(); }
-        });
-    });
-
-    // === PESTAÑA TRABAJOS ===
-    function cargarTrabajosAlMuro() {
-        const tbody = document.querySelector('#tablaTrabajosPrincipal tbody');
-        fetch('../php/listar_trabajos.php')
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    tbody.innerHTML = ''; 
-                    result.data.forEach(t => {
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${t.id_trabajo}</td>
-                                <td>${t.actividad}</td>
-                                <td>${t.ubicacion}</td>
-                                <td style="max-width: 250px; font-size: 0.85rem; color: #555;">${t.descripcion}</td>
-                                <td><span style="background:#d4edda; color:#155724; padding:4px 8px; border-radius:4px; font-size:0.85rem;">Registrado</span></td>
-                                <td>
-                                    <button onclick="verEvidenciasModal(${t.id_trabajo})" style="background-color: #f39c12; color: white; border: none; padding: 6px 10px; border-radius: 4px; cursor: pointer; transition: 0.3s;">
-                                        <i class="fas fa-camera"></i> Ver Fotos
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                }
-            });
-    }
-
-    // === FUNCIONES PARA VER FOTOS EN MODAL (AHORA CON DESCARGA) ===
-    function verEvidenciasModal(id_trabajo) {
-        document.getElementById('modalVerFotos').style.display = 'flex';
-        document.getElementById('tituloModalFotosID').innerText = id_trabajo;
-        const contenedor = document.getElementById('contenedorFotosModal');
-        contenedor.innerHTML = '<p>Buscando evidencias...</p>';
-
-        fetch(`../php/obtener_evidencias_por_trabajo.php?id=${id_trabajo}`)
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    contenedor.innerHTML = '';
-                    if (result.data.length === 0) {
-                        contenedor.innerHTML = '<p style="color: #888;">No hay fotos registradas para este trabajo.</p>';
-                        return;
-                    }
-                    result.data.forEach((foto, index) => {
-                        // Se añadió el <a download> que funciona como botón de descarga
-                        const imgCard = `
-                            <div style="border: 1px solid #ddd; padding: 10px; border-radius: 8px; width: 200px; text-align: center; background: #f9f9f9;">
-                                <img src="${foto.ruta_archivo}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 4px; border: 1px solid #ccc;">
-                                <p style="font-size: 0.75rem; color: #666; margin-top: 8px;"><i class="far fa-clock"></i> ${foto.fecha_subida}</p>
-                                <a href="${foto.ruta_archivo}" download="ID${id_trabajo}_Evidencia${index + 1}.jpg" class="btn-download-img">
-                                    <i class="fas fa-download"></i> Descargar
-                                </a>
-                            </div>
-                        `;
-                        contenedor.innerHTML += imgCard;
-                    });
-                } else {
-                    contenedor.innerHTML = `<p style="color: red;">Error: ${result.mensaje}</p>`;
-                }
-            })
-            .catch(error => { console.error(error); contenedor.innerHTML = '<p style="color: red;">Error de red.</p>'; });
-    }
-
-    function cerrarModalFotos() {
-        document.getElementById('modalVerFotos').style.display = 'none';
-    }
-
-    // === CREAR NUEVO TRABAJO ===
-    function abrirModalTrabajo() { document.getElementById('modalTrabajo').style.display = 'flex'; }
-    function cerrarModalTrabajo() { document.getElementById('modalTrabajo').style.display = 'none'; document.getElementById('formModalNuevoTrabajo').reset(); }
-    
-    document.getElementById('formModalNuevoTrabajo').addEventListener('submit', function(e) {
-        e.preventDefault(); 
-        const datos = {
-            id_tipo: document.getElementById('modalTipoActividad').value,
-            id_cuadrilla: document.getElementById('modalCuadrilla').value,
-            ubicacion: document.getElementById('modalUbicacion').value,
-            descripcion: document.getElementById('modalDescripcion').value,
-            id_usuario: 1 
-        };
-        fetch('../php/guardar_trabajo.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) })
-        .then(response => response.json()).then(data => {
-            if(data.success) { alert("Registrado!"); cerrarModalTrabajo(); cargarTrabajosAlMuro(); } 
-        });
-    });
-
-    // === EVIDENCIAS GENERALES (AHORA CON DESCARGA) ===
-    function cargarSelectTrabajos() {
-        fetch('../php/listar_trabajos.php').then(r => r.json()).then(res => {
-            if(res.success) {
-                const select = document.getElementById('selectTrabajoEvidencia');
-                select.innerHTML = '<option value="">-- Seleccione un Trabajo --</option>';
-                res.data.forEach(t => select.innerHTML += `<option value="${t.id_trabajo}" data-actividad="${t.actividad}" data-ubicacion="${t.ubicacion}">ID: ${t.id_trabajo} - ${t.actividad}</option>`);
-            }
-        });
-    }
-
-    document.getElementById('selectTrabajoEvidencia').addEventListener('change', function() {
-        const op = this.options[this.selectedIndex];
-        document.getElementById('evidenciaActividad').value = this.value ? op.getAttribute('data-actividad') : "";
-        document.getElementById('evidenciaUbicacion').value = this.value ? op.getAttribute('data-ubicacion') : "";
-    });
-
-    document.getElementById('formSubirEvidencia').addEventListener('submit', function(e) {
-        e.preventDefault(); 
-        fetch('../php/subir_evidencia.php', { method: 'POST', body: new FormData(this) })
-        .then(r => r.json()).then(data => {
-            if(data.success) { alert("¡Evidencia subida!"); this.reset(); cargarGaleriaEvidencias(); } 
-        });
-    });
-
-    function cargarGaleriaEvidencias() {
-        fetch('../php/listar_evidencias.php').then(r => r.json()).then(res => {
-            if (res.success) {
-                const gal = document.getElementById('galeriaEvidencias');
-                gal.innerHTML = res.data.length ? '' : '<p>No hay evidencias.</p>';
-                res.data.forEach((e, index) => {
-                    // Se añadió el <a download> que funciona como botón de descarga
-                    gal.innerHTML += `
-                        <div style="border:1px solid #ddd; padding:10px; border-radius:8px; width:220px; text-align:center;">
-                            <img src="${e.ruta_archivo}" style="width:100%; height:160px; object-fit:cover;">
-                            <div style="margin-top:10px;">
-                                <span style="background:#1a2b4c; color:white; padding:3px 8px; border-radius:12px; font-size:0.75rem;">ID: ${e.id_trabajo}</span>
-                                <p style="font-size:0.85rem; font-weight:bold; margin-top:5px;">${e.actividad}</p>
-                                <p style="font-size:0.75rem;">📍 ${e.ubicacion}</p>
-                                <a href="${e.ruta_archivo}" download="Evidencia_Trabajo_${e.id_trabajo}_v${index}.jpg" class="btn-download-img">
-                                    <i class="fas fa-download"></i> Descargar
-                                </a>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-        });
-    }
-
-    // === USUARIO ===
-    document.getElementById('sidebarUserName').innerText = localStorage.getItem('usuarioNombre') || 'Usuario';
-    document.getElementById('logoutSidebarBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = '../php/logout.php'; });
-
-    cargarTrabajosAlMuro();
-</script>
 </body>
 </html>

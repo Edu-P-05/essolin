@@ -5,8 +5,8 @@ header("Content-Type: application/json; charset=utf-8");
 
 try {
     $pdo = getConexion();
-    // Añadimos t.descripcion a la consulta
-    $sql = "SELECT t.id_trabajo, tt.nombre_tipo AS actividad, t.ubicacion, t.descripcion 
+    // Añadimos t.estado a la consulta SELECT
+    $sql = "SELECT t.id_trabajo, tt.nombre_tipo AS actividad, t.ubicacion, t.descripcion, t.estado 
             FROM trabajos t
             INNER JOIN tipos_trabajo tt ON t.id_tipo = tt.id_tipo
             ORDER BY t.fecha_registro DESC";

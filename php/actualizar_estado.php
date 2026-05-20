@@ -1,36 +1,32 @@
 <?php
-/* ============================================================
-   ESSOLIN - Gestión Industrial Eléctrica
-   Archivo: php/actualizar_estado.php
-   Descripción: Actualiza el estado de un trabajo en la BD
-
-   Recibe (JSON POST):
-     { "id": "T-01", "estado": "proceso" }
-
-   Retorna (JSON):
-     { "success": true/false, "mensaje": "..." }
-   ============================================================ */
-
+// Archivo: php/actualizar_estado.php
+session_start();
 require_once 'conexion.php';
+header("Content-Type: application/json; charset=utf-8");
 
-$datos  = json_decode(file_get_contents('php://input'), true);
-$codigo = trim($datos['id']     ?? '');
-$estado = trim($datos['estado'] ?? '');
+// Leemos los datos enviados por JavaScript
+$datos = json_decode(file_get_contents('php://input'), true);
 
-$estadosValidos = ['programado', 'proceso', 'finalizado'];
+$id_trabajo = $datos['id_trabajo'] ?? '';
+$nuevo_estado = $datos['estado'] ?? '';
 
-if (empty($codigo) || !in_array($estado, $estadosValidos)) {
-    echo json_encode(["success" => false, "mensaje" => "Datos inválidos."]);
+// Validar que no lleguen vacíos
+if (empty($id_trabajo) || empty($nuevo_estado)) {
+    echo json_encode(["success" => false, "mensaje" => "Faltan datos para actualizar."]);
     exit;
 }
 
-$pdo  = getConexion();
-$stmt = $pdo->prepare("UPDATE trabajos SET estado = ? WHERE codigo = ?");
-$stmt->execute([$estado, $codigo]);
-
-if ($stmt->rowCount() > 0) {
-    echo json_encode(["success" => true, "mensaje" => "Estado actualizado a '$estado'."]);
-} else {
-    echo json_encode(["success" => false, "mensaje" => "No se encontró el trabajo con código $codigo."]);
+try {
+    $pdo = getConexion();
+    // Preparamos la actualización en la base de datos
+    $stmt = $pdo->prepare("UPDATE trabajos SET estado = ? WHERE id_trabajo = ?");
+    
+    if ($stmt->execute([$nuevo_estado, $id_trabajo])) {
+        echo json_encode(["success" => true, "mensaje" => "Estado actualizado a " . $nuevo_estado]);
+    } else {
+        echo json_encode(["success" => false, "mensaje" => "No se pudo actualizar el registro."]);
+    }
+} catch (PDOException $e) {
+    echo json_encode(["success" => false, "mensaje" => "Error SQL: " . $e->getMessage()]);
 }
 ?>
