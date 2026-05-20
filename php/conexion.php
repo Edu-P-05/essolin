@@ -1,18 +1,4 @@
 <?php
-/* ============================================================
-   ESSOLIN - Gestión Industrial Eléctrica
-   Archivo: php/conexion.php
-   Descripción: Configuración de conexión a MySQL (XAMPP)
-
-   INSTRUCCIONES PARA XAMPP:
-   1. Asegúrate de que XAMPP esté corriendo (Apache + MySQL).
-   2. Copia toda la carpeta "essolin/" dentro de:
-      C:/xampp/htdocs/essolin/
-   3. Abre phpMyAdmin en: http://localhost/phpmyadmin
-   4. Crea la base de datos "essolin_db" (ver archivo sql/essolin_db.sql).
-   5. Cambia los datos de abajo si tu MySQL usa usuario/contraseña distintos.
-   ============================================================ */
-
 define('DB_HOST',   'localhost');   // Siempre "localhost" en XAMPP
 define('DB_USER',   'root');        // Usuario por defecto de XAMPP
 define('DB_PASS',   '');            // Contraseña vacía por defecto en XAMPP

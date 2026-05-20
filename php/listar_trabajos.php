@@ -13,7 +13,15 @@ try {
             
     $stmt = $pdo->prepare($sql);
     $stmt->execute();
-    $trabajos = $stmt->fetchAll();
+    
+    // Obtenemos los datos como un arreglo asociativo
+    $trabajos = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($trabajos as &$t) {
+        $t['ubicacion'] = htmlspecialchars($t['ubicacion'], ENT_QUOTES, 'UTF-8');
+        $t['descripcion'] = htmlspecialchars($t['descripcion'], ENT_QUOTES, 'UTF-8');
+    }
+    unset($t); // Rompemos la referencia por seguridad en memoria
 
     echo json_encode(["success" => true, "data" => $trabajos]);
 } catch (PDOException $e) {
