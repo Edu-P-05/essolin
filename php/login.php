@@ -1,4 +1,7 @@
 <?php
+// 1. INICIAMOS EL MOTOR DE SESIONES (Debe ser la primera línea)
+session_start();
+
 require_once 'conexion.php'; // Asegúrate de que la ruta sea correcta
 
 // Leer datos enviados desde el formulario de login (JSON)
@@ -34,6 +37,11 @@ if (!password_verify($password, $usuario['password'])) {
     echo json_encode(["success" => false, "mensaje" => "Contraseña incorrecta."]);
     exit;
 }
+
+// 2. CREAMOS EL "GAFETE" VIP PARA EL USUARIO
+$_SESSION['usuario_logueado'] = true;
+$_SESSION['id_usuario'] = $usuario['id_usuario']; 
+$_SESSION['nombre_usuario'] = $usuario['nombre_completo'];
 
 // Login exitoso
 echo json_encode([

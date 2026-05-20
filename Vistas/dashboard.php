@@ -1,4 +1,14 @@
+<?php
+session_start(); // Inicia el motor de sesiones
+
+// Si el usuario no tiene su "gafete" de sesión iniciada, lo devolvems al login
+if (!isset($_SESSION['usuario_logueado'])) {
+    header("Location: index2.html");
+    exit; // Detiene la carga del resto de la página por seguridad
+}
+?>
 <!DOCTYPE html>
+
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -340,7 +350,7 @@
 
     // === USUARIO ===
     document.getElementById('sidebarUserName').innerText = localStorage.getItem('usuarioNombre') || 'Usuario';
-    document.getElementById('logoutSidebarBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = 'index2.html'; });
+    document.getElementById('logoutSidebarBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = '../php/logout.php'; });
 
     cargarTrabajosAlMuro();
 </script>
