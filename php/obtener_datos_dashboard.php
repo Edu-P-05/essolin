@@ -6,55 +6,60 @@ header("Content-Type: application/json; charset=utf-8");
 
 try {
     $pdo = getConexion();
+    $filtrado = [];
 
-    // 1. Tarjetas Superiores: Contar trabajos por Estado
-    $stmtResumen = $pdo->query("SELECT estado, COUNT(*) as total FROM trabajos GROUP BY estado");
-    $filasResumen = $stmtResumen->fetchAll(PDO::FETCH_ASSOC);
-    
-    $resumen = ['Programado' => 0, 'En Proceso' => 0, 'Finalizado' => 0];
-    foreach($filasResumen as $fila) {
-        $resumen[$fila['estado']] = $fila['total']; // Asignamos el valor real de la BD
-    }
+    // 1. Conteo de Estados Fijos
+    $sqlEstados = "SELECT 
+                    SUM(CASE WHEN estado = 'Programado' THEN 1 ELSE 0 END) as programados,
+                    SUM(CASE WHEN estado = 'En Proceso' THEN 1 ELSE 0 END) as en_proceso,
+                    SUM(CASE WHEN estado = 'Finalizado' THEN 1 ELSE 0 END) as finalizados
+                   FROM trabajos";
+    $stmt = $pdo->query($sqlEstados);
+    $conteos = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    // 2. Gráfico de Barras: Contar trabajos por Tipo de Actividad
-    $stmtTipos = $pdo->query("
-        SELECT tt.nombre_tipo, COUNT(t.id_trabajo) as cantidad 
-        FROM trabajos t 
-        INNER JOIN tipos_trabajo tt ON t.id_tipo = tt.id_tipo 
-        GROUP BY tt.id_tipo
-    ");
-    $graficoBarras = $stmtTipos->fetchAll(PDO::FETCH_ASSOC);
+    // 2. NUEVO KPI: Tiempo Promedio de Resolución (Lead Time en días)
+    $sqlLeadTime = "SELECT AVG(DATEDIFF(fecha_finalizacion, fecha_registro)) as promedio_dias 
+                    FROM trabajos 
+                    WHERE estado = 'Finalizado' AND fecha_finalizacion IS NOT NULL";
+    $stmtLT = $pdo->query($sqlLeadTime);
+    $resLT = $stmtLT->fetch(PDO::FETCH_ASSOC);
+    $promedioDias = isset($resLT['promedio_dias']) ? round($resLT['promedio_dias'], 1) : 0;
 
-    // 3. Últimas 4 fotos para la galería rápida
-    $stmtFotos = $pdo->query("
-        SELECT e.ruta_archivo, t.ubicacion 
-        FROM evidencias e 
-        INNER JOIN trabajos t ON e.id_trabajo = t.id_trabajo 
-        ORDER BY e.fecha_subida DESC LIMIT 4
-    ");
-    $fotos = $stmtFotos->fetchAll(PDO::FETCH_ASSOC);
-    
-    // Transformar binarios a Base64 para mostrarlos
-    foreach ($fotos as &$foto) {
-        if (!empty($foto['ruta_archivo'])) {
-            $base64 = base64_encode($foto['ruta_archivo']);
-            $foto['ruta_archivo'] = 'data:image/jpeg;base64,' . $base64;
-        }
-    }
+    // 3. Gráfico de Actividades
+    $sqlActividades = "SELECT tt.nombre_tipo as actividad, COUNT(t.id_trabajo) as cantidad 
+                       FROM trabajos t 
+                       INNER JOIN tipos_trabajo tt ON t.id_tipo = tt.id_tipo 
+                       GROUP BY t.id_tipo";
+    $stmtAct = $pdo->query($sqlActividades);
+    $actividades = $stmtAct->fetchAll(PDO::FETCH_ASSOC);
 
-    // Enviar todo en un solo "paquete" JSON
+    // 4. NUEVO GRÁFICO: Productividad por Cuadrilla (Solo finalizados)
+    $sqlCuadrillas = "SELECT 
+                        CASE 
+                            WHEN id_cuadrilla = 1 THEN 'Cuadrilla Alpha'
+                            WHEN id_cuadrilla = 2 THEN 'Cuadrilla Beta'
+                            WHEN id_cuadrilla = 3 THEN 'Cuadrilla Gamma'
+                            ELSE 'Sin Asignar'
+                        END as cuadrilla,
+                        COUNT(id_trabajo) as cantidad
+                      FROM trabajos 
+                      WHERE estado = 'Finalizado'
+                      GROUP BY id_cuadrilla";
+    $stmtCua = $pdo->query($sqlCuadrillas);
+    $cuadrillas = $stmtCua->fetchAll(PDO::FETCH_ASSOC);
+
+    // Armando la respuesta final consolidada
     echo json_encode([
         "success" => true,
-        "tarjetas" => [
-            "programados" => $resumen['Programado'],
-            "en_proceso" => $resumen['En Proceso'],
-            "finalizados" => $resumen['Finalizado']
-        ],
-        "grafico_barras" => $graficoBarras,
-        "fotos_recientes" => $fotos
+        "programados" => $conteos['programados'] ?? 0,
+        "en_proceso"  => $conteos['en_proceso'] ?? 0,
+        "finalizados" => $conteos['finalizados'] ?? 0,
+        "tiempo_promedio" => $promedioDias,
+        "actividades" => $actividades,
+        "cuadrillas"  => $cuadrillas
     ]);
 
 } catch (PDOException $e) {
-    echo json_encode(["success" => false, "mensaje" => "Error BD: " . $e->getMessage()]);
+    echo json_encode(["success" => false, "mensaje" => $e->getMessage()]);
 }
 ?>

@@ -16,10 +16,11 @@ if (empty($email) || empty($password)) {
     exit;
 }
 
-// Buscar usuario en la base de datos cruzando la tabla usuarios y roles
+// Buscar usuario en la base de datos
+// SE AÑADIÓ: u.estado a la consulta para saber si está activo o suspendido
 $pdo  = getConexion();
 $stmt = $pdo->prepare("
-    SELECT u.id_usuario, u.nombre_completo, u.password, r.nombre_rol 
+    SELECT u.id_usuario, u.nombre_completo, u.password, r.nombre_rol, u.id_rol, u.estado 
     FROM usuarios u
     INNER JOIN roles r ON u.id_rol = r.id_rol
     WHERE u.email = ? LIMIT 1
@@ -32,6 +33,13 @@ if (!$usuario) {
     exit;
 }
 
+// --- NUEVA VALIDACIÓN: CANDADO DE SUSPENSIÓN ---
+if ($usuario['estado'] === 'Suspendido') {
+    echo json_encode(["success" => false, "mensaje" => "Acceso denegado. Tu cuenta se encuentra suspendida. Contacta a un Administrador."]);
+    exit;
+}
+// ------------------------------------------------
+
 // Verificar contraseña (hash bcrypt guardado en BD)
 if (!password_verify($password, $usuario['password'])) {
     echo json_encode(["success" => false, "mensaje" => "Contraseña incorrecta."]);
@@ -42,6 +50,7 @@ if (!password_verify($password, $usuario['password'])) {
 $_SESSION['usuario_logueado'] = true;
 $_SESSION['id_usuario'] = $usuario['id_usuario']; 
 $_SESSION['nombre_usuario'] = $usuario['nombre_completo'];
+$_SESSION['id_rol'] = $usuario['id_rol']; 
 
 // Login exitoso
 echo json_encode([

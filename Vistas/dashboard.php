@@ -4,8 +4,12 @@ session_start(); // Inicia el motor de sesiones
 // Si el usuario no tiene su "gafete" de sesión iniciada, lo devolvemos al login
 if (!isset($_SESSION['usuario_logueado'])) {
     header("Location: index2.html");
-    exit; // Detiene la carga del resto de la página por seguridad
+    exit;
 }
+
+// Rescatamos el rol del usuario (1:Admin, 2:Supervisor, 3:Tecnico, 4:Secretaria)
+// Por defecto ponemos 1 temporalmente por si aún no configuras esto en el login
+$id_rol = $_SESSION['id_rol'] ?? 1; 
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -68,24 +72,46 @@ if (!isset($_SESSION['usuario_logueado'])) {
                 <p>Gestión de Operaciones</p>
             </div>
             <nav class="nav-links">
-                <div class="nav-item active" data-page="inicio"><i class="fas fa-tachometer-alt"></i> <span>Inicio</span></div>
-                <div class="nav-item" data-page="trabajos"><i class="fas fa-clipboard-list"></i> <span>Trabajos</span></div>
-                <div class="nav-item" data-page="evidencias"><i class="fas fa-bolt"></i> <span>Evidencias</span></div>
-                <div class="nav-item" data-page="reportes"><i class="fas fa-chart-line"></i> <span>Reportes</span></div>
-                <div class="nav-item" data-page="usuarios"><i class="fas fa-users"></i> <span>Usuarios</span></div>
+                <?php if ($id_rol == 1 || $id_rol == 2 || $id_rol == 4): ?>
+                    <div class="nav-item <?php echo ($id_rol != 3) ? 'active' : ''; ?>" data-page="inicio"><i class="fas fa-tachometer-alt"></i> <span>Inicio</span></div>
+                <?php endif; ?>
+
+                <div class="nav-item <?php echo ($id_rol == 3) ? 'active' : ''; ?>" data-page="trabajos"><i class="fas fa-clipboard-list"></i> <span>Trabajos</span></div>
+
+                <?php if ($id_rol == 1 || $id_rol == 2 || $id_rol == 3): ?>
+                    <div class="nav-item" data-page="evidencias"><i class="fas fa-bolt"></i> <span>Evidencias</span></div>
+                <?php endif; ?>
+
+                <?php if ($id_rol == 1 || $id_rol == 2 || $id_rol == 4): ?>
+                    <div class="nav-item" data-page="reportes"><i class="fas fa-chart-line"></i> <span>Reportes</span></div>
+                <?php endif; ?>
+
+                <?php if ($id_rol == 1): ?>
+                    <div class="nav-item" data-page="usuarios"><i class="fas fa-users"></i> <span>Usuarios</span></div>
+                <?php endif; ?>
             </nav>
         </div>
         <div class="sidebar-footer">
             <div class="user-info">
-                <strong id="sidebarUserName">Usuario</strong><br>
-                <span id="sidebarUserRol">Cargando...</span>
+                <strong id="sidebarUserName"><?php echo $_SESSION['nombre_usuario'] ?? 'Usuario'; ?></strong><br>
+                <span id="sidebarUserRol"><?php 
+                        // Traducimos el número de rol a texto para mostrarlo bonito
+                        $nombres_roles = [
+                            1 => 'Administrador', 
+                            2 => 'Supervisor', 
+                            3 => 'Técnico de Campo', 
+                            4 => 'Secretaria'
+                        ];
+                        echo $nombres_roles[$id_rol] ?? 'Rol no definido';
+                    ?></span>
             </div>
             <button id="logoutSidebarBtn" class="logout-sidebar"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
         </div>
     </div>
 
     <div class="main-content">
-        <div id="page-inicio" class="page-panel active-panel">
+        
+        <div id="page-inicio" class="page-panel <?php echo ($id_rol != 3) ? 'active-panel' : ''; ?>">
             <div class="page-title"><i class="fas fa-chart-simple"></i> Panel Principal ESSOLIN</div>
             
             <div class="stats-grid">
@@ -101,19 +127,29 @@ if (!isset($_SESSION['usuario_logueado'])) {
                     <div class="stat-number" id="dash-fin" style="color: #155724;">0</div>
                     <div style="font-weight: bold; color: #555;">Finalizados</div>
                 </div>
+                <div class="stat-card" style="border-left: 5px solid #2c7da0;">
+                    <div class="stat-number" id="dash-tiempo" style="color: #2c7da0;">0d</div>
+                    <div style="font-weight: bold; color: #555;">Tiempo de Cierre</div>
+                </div>
             </div>
 
             <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
-                <div class="module-card" style="flex: 1; min-width: 300px;">
-                    <h3 style="margin-bottom: 15px; color: #1a2b4c; text-align: center;">Distribución Operativa</h3>
-                    <div style="position: relative; height:250px; width:100%; display: flex; justify-content: center;">
+                <div class="module-card" style="flex: 1; min-width: 250px;">
+                    <h3 style="margin-bottom: 15px; color: #1a2b4c; text-align: center; font-size: 1.1rem;">Distribución de Estados</h3>
+                    <div style="position: relative; height:220px; width:100%; display: flex; justify-content: center;">
                         <canvas id="graficoEstados"></canvas>
                     </div>
                 </div>
-                <div class="module-card" style="flex: 2; min-width: 400px;">
-                    <h3 style="margin-bottom: 15px; color: #1a2b4c;">Trabajos por Tipo de Actividad</h3>
-                    <div style="position: relative; height:250px; width:100%;">
+                <div class="module-card" style="flex: 1.2; min-width: 280px;">
+                    <h3 style="margin-bottom: 15px; color: #1a2b4c; font-size: 1.1rem;">Trabajos por Actividad</h3>
+                    <div style="position: relative; height:220px; width:100%;">
                         <canvas id="graficoActividades"></canvas>
+                    </div>
+                </div>
+                <div class="module-card" style="flex: 1.2; min-width: 280px;">
+                    <h3 style="margin-bottom: 15px; color: #1a2b4c; font-size: 1.1rem;">Cierres por Cuadrilla</h3>
+                    <div style="position: relative; height:220px; width:100%;">
+                        <canvas id="graficoCuadrillas"></canvas>
                     </div>
                 </div>
             </div>
@@ -126,7 +162,7 @@ if (!isset($_SESSION['usuario_logueado'])) {
             </div>
         </div>
 
-        <div id="page-trabajos" class="page-panel">
+        <div id="page-trabajos" class="page-panel <?php echo ($id_rol == 3) ? 'active-panel' : ''; ?>">
             <div class="page-title" style="display: flex; justify-content: space-between; align-items: center;">
                 <div><i class="fas fa-briefcase"></i> Gestión de Trabajos</div>
                 <button onclick="abrirModalTrabajo()" class="btn-primary" style="background-color: #2c7da0;"><i class="fas fa-plus"></i> Nuevo Trabajo</button>
@@ -188,8 +224,94 @@ if (!isset($_SESSION['usuario_logueado'])) {
             </div>
         </div>
 
-        <div id="page-reportes" class="page-panel"><div class="page-title"><i class="fas fa-chart-pie"></i> Reporte Operativo</div></div>
-        <div id="page-usuarios" class="page-panel"><div class="page-title"><i class="fas fa-users"></i> Gestión de Usuarios</div></div>
+        <div id="page-reportes" class="page-panel">
+            <div class="page-title"><i class="fas fa-chart-pie"></i> Reporte Operativo Detallado</div>
+            
+            <div class="module-card" style="background-color: #e9ecef;">
+                <form id="formFiltrosReporte">
+                    <div class="form-row" style="align-items: flex-end;">
+                        <div class="form-group">
+                            <label>Fecha Inicio</label>
+                            <input type="date" id="filtroFechaInicio">
+                        </div>
+                        <div class="form-group">
+                            <label>Fecha Fin</label>
+                            <input type="date" id="filtroFechaFin">
+                        </div>
+                        <div class="form-group">
+                            <label>Estado del Trabajo</label>
+                            <select id="filtroEstado">
+                                <option value="">Todos los estados</option>
+                                <option value="Pendientes">Todos los Pendientes (Programados / En Proceso)</option>
+                                <option value="Programado">Solo Programados</option>
+                                <option value="En Proceso">Solo En Proceso</option>
+                                <option value="Finalizado">Solo Finalizados</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: none; display: flex; flex-direction: column; gap: 10px; justify-content: flex-end;">
+                            <button type="button" onclick="generarReporte()" class="btn-primary" style="background-color: #2c7da0; margin: 0;">
+                                <i class="fas fa-search"></i> Buscar
+                            </button>
+                            <button type="button" onclick="exportarExcel()" class="btn-secondary" style="background-color: #27ae60; margin: 0;">
+                                <i class="fas fa-file-excel"></i> Exportar CSV
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="module-card">
+                <div style="overflow-x:auto;">
+                    <table id="tablaReportes">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>F. Registro</th>
+                                <th>F. Programada</th>
+                                <th>F. Finalización</th>
+                                <th>Días Transcurridos</th>
+                                <th>Actividad</th>
+                                <th>Ubicación</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="9" style="text-align: center; color: #888;">Utilice los filtros superiores para generar un reporte.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-usuarios" class="page-panel">
+            <div class="page-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div><i class="fas fa-users"></i> Gestión de Usuarios</div>
+                <button onclick="abrirModalUsuario()" class="btn-primary" style="background-color: #2c7da0;">
+                    <i class="fas fa-user-plus"></i> Nuevo Usuario
+                </button>
+            </div>
+            
+            <div class="module-card">
+                <div style="overflow-x:auto;">
+                    <table id="tablaUsuarios">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre Completo</th>
+                                <th>Usuario (Login)</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="6" style="text-align: center; color: #888;">Cargando usuarios...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -198,11 +320,38 @@ if (!isset($_SESSION['usuario_logueado'])) {
         <h3 style="margin-bottom:20px;"><i class="fas fa-plus-circle"></i> Registrar Trabajo en Campo</h3>
         <form id="formModalNuevoTrabajo">
             <div class="form-row">
-                <div class="form-group"><label>Tipo Actividad</label><select id="modalTipoActividad" required><option value="1">Mantenimiento Preventivo</option><option value="2">Reparación de Avería</option><option value="3">Instalación de Tableros</option><option value="4">Diagnóstico de Fallas</option></select></div>
-                <div class="form-group"><label>Cuadrilla Asignada</label><select id="modalCuadrilla" required><option value="1">Cuadrilla Alpha</option><option value="2">Cuadrilla Beta</option><option value="3">Cuadrilla Gamma</option></select></div>
+                <div class="form-group">
+                    <label>Tipo Actividad</label>
+                    <select id="modalTipoActividad" required>
+                        <option value="1">Mantenimiento Preventivo</option>
+                        <option value="2">Reparación de Avería</option>
+                        <option value="3">Instalación de Tableros</option>
+                        <option value="4">Diagnóstico de Fallas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Cuadrilla Asignada</label>
+                    <select id="modalCuadrilla" required>
+                        <option value="1">Cuadrilla Alpha</option>
+                        <option value="2">Cuadrilla Beta</option>
+                        <option value="3">Cuadrilla Gamma</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group" style="margin-bottom: 15px;"><label>Ubicación / Lugar</label><input type="text" id="modalUbicacion" required></div>
-            <div class="form-group" style="margin-bottom: 20px;"><label>Descripción del Trabajo</label><textarea id="modalDescripcion" rows="3" required></textarea></div>
+            <div class="form-row">
+                <div class="form-group" style="flex: 2;">
+                    <label>Ubicación / Lugar</label>
+                    <input type="text" id="modalUbicacion" required>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>Fecha Programada</label>
+                    <input type="date" id="modalFechaProgramada" required>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 20px; margin-top: 15px;">
+                <label>Descripción del Trabajo</label>
+                <textarea id="modalDescripcion" rows="3" required></textarea>
+            </div>
             <div style="text-align: right; gap: 10px; display: flex; justify-content: flex-end;">
                 <button type="button" onclick="cerrarModalTrabajo()" class="btn-secondary">Cancelar</button>
                 <button type="submit" class="btn-primary">Guardar Registro</button>
@@ -211,20 +360,90 @@ if (!isset($_SESSION['usuario_logueado'])) {
     </div>
 </div>
 
-<div id="modalVerFotos" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.7); align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:8px; width:90%; max-width:800px; max-height: 80vh; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-            <h3 style="color:#1a2b4c;"><i class="fas fa-images"></i> Evidencias del Trabajo ID: <span id="tituloModalFotosID"></span></h3>
-            <button onclick="cerrarModalFotos()" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer;"><i class="fas fa-times"></i> Cerrar</button>
+<div id="modalBitacora" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+    <div style="background:white; padding:25px; border-radius:8px; width:90%; max-width:600px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 85vh;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+            <h3 style="color:#1a2b4c;"><i class="fas fa-comments"></i> Bitácora del Trabajo ID: <span id="tituloModalBitacoraID"></span></h3>
+            <button onclick="cerrarModalBitacora()" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;"><i class="fas fa-times"></i></button>
         </div>
-        <div id="contenedorFotosModal" style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center;">
-            <p>Buscando fotos...</p>
+
+        <div id="contenedorComentarios" style="flex: 1; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 15px; min-height: 200px;">
+            <p style="color: #888; text-align: center; font-style: italic;">Cargando historial...</p>
         </div>
+
+        <form id="formNuevoComentario" style="display: flex; flex-direction: column; gap: 10px;">
+            <input type="hidden" id="inputBitacoraIdTrabajo">
+            <textarea id="textoNuevoComentario" rows="2" placeholder="Escribe un avance, incidente o nota aquí..." required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: none;"></textarea>
+            <button type="submit" class="btn-primary" style="background-color: #2c7da0; align-self: flex-end;"><i class="fas fa-paper-plane"></i> Agregar Nota</button>
+        </form>
     </div>
 </div>
 
+<div id="modalUsuario" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:8px; width:90%; max-width:500px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
+            <h3 style="color:#1a2b4c; margin:0;"><i class="fas fa-user-plus"></i> Registrar Usuario</h3>
+            <button onclick="cerrarModalUsuario()" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <form id="formModalNuevoUsuario">
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>Nombre Completo</label>
+                <input type="text" id="modalUsuNombre" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Usuario (Login)</label>
+                    <input type="text" id="modalUsuLogin" required>
+                </div>
+                <div class="form-group">
+                    <label>Contraseña</label>
+                    <input type="password" id="modalUsuPass" required>
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 15px;">
+                <label>Rol del Sistema</label>
+                <select id="modalUsuRol" required>
+                    <option value="Administrador">Administrador</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Tecnico">Técnico</option>
+                    <option value="Secretaria">Secretaria</option>
+                </select>
+            </div>
+            <div style="text-align: right; margin-top: 25px;">
+                <button type="submit" class="btn-primary" style="width: 100%;"><i class="fas fa-save"></i> Guardar Usuario</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="modalVerFotos" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+    <div style="background:white; padding:25px; border-radius:8px; width:90%; max-width:800px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 85vh;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+            <h3 style="color:#1a2b4c;"><i class="fas fa-camera"></i> Evidencias Fotográficas - Trabajo ID: <span id="tituloModalFotosID"></span></h3>
+            <button onclick="document.getElementById('modalVerFotos').style.display='none'" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;"><i class="fas fa-times"></i></button>
+        </div>
+
+        <div id="contenedorFotosModal" style="display: flex; gap: 15px; flex-wrap: wrap; overflow-y: auto; padding: 10px; justify-content: center; background: #f8f9fa; border-radius: 6px; border: 1px solid #ddd; min-height: 200px;">
+            <p style="color: #888; font-style: italic;">Buscando evidencias...</p>
+        </div>
+        
+    </div>
+</div>
+
+<script>
+    const ID_ROL_ACTUAL = <?php echo $id_rol; ?>;
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="../js/Dashboard.js"></script>
+</body>
+</html>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../js/Dashboard.js"></script>
+
 
 </body>
 </html>
