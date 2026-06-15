@@ -503,10 +503,13 @@ function cargarUsuarios() {
                     // Colores para el Estado
                     let colorEstado = (u.estado === 'Activo') ? 'color:#27ae60; font-weight:bold;' : 'color:#c0392b; font-weight:bold;';
 
-                    // Lógica del Botón de Acción con Protección Anti-Lockout
+                    // --- INICIO DEL PASO 3.1: BOTONES ---
+                    // Botón de Editar (Azul)
+                    let btnEditar = `<button onclick="abrirModalEditarUsuario(${u.id_usuario}, '${u.nombre_completo}', '${u.usuario}', '${u.rol}')" style="background-color: #3498db; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: 0.3s; margin-right: 5px;" title="Modificar datos"><i class="fas fa-edit"></i> Editar</button>`;
+
+                    // Lógica del Botón de Acción (Suspender/Activar) con Protección Anti-Lockout
                     let btnAccion = '';
                     if (u.es_yo) {
-                        // Si soy yo mismo, muestro un candado y desactivo el botón
                         btnAccion = `<button style="background-color: #95a5a6; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 0.8rem; cursor: not-allowed;" title="Por seguridad, no puedes suspender tu propia cuenta" disabled><i class="fas fa-lock"></i> Es tu cuenta</button>`;
                     } else if (u.estado === 'Activo') {
                         btnAccion = `<button onclick="cambiarEstadoUsuario(${u.id_usuario}, 'Suspendido')" style="background-color: #e74c3c; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: 0.3s;" title="Suspender acceso"><i class="fas fa-ban"></i> Suspender</button>`;
@@ -514,6 +517,7 @@ function cargarUsuarios() {
                         btnAccion = `<button onclick="cambiarEstadoUsuario(${u.id_usuario}, 'Activo')" style="background-color: #27ae60; color: white; padding: 5px 10px; border: none; border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: 0.3s;" title="Reactivar acceso"><i class="fas fa-check-circle"></i> Activar</button>`;
                     }
 
+                    // Inyectamos la fila en la tabla (agregamos ambos botones en la última columna)
                     tbody.innerHTML += `
                         <tr>
                             <td>${u.id_usuario}</td>
@@ -521,9 +525,10 @@ function cargarUsuarios() {
                             <td><i class="fas fa-user" style="color:#888;"></i> ${u.usuario}</td>
                             <td><span style="${badgeRol}">${u.rol}</span></td>
                             <td style="${colorEstado}">${u.estado}</td>
-                            <td>${btnAccion}</td>
+                            <td><div style="display:flex;">${btnEditar} ${btnAccion}</div></td>
                         </tr>
                     `;
+                    // --- FIN DEL PASO 3.1 ---
                 });
             } else {
                 tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Error: ${result.mensaje}</td></tr>`;
@@ -651,6 +656,52 @@ function cargarFotosRecientesDashboard() {
             contenedor.innerHTML = '<p style="color: red;">Error de red al cargar evidencias.</p>';
         });
 }
+
+// === MÓDULO: EDITAR USUARIO EXISTENTE ===
+function abrirModalEditarUsuario(id, nombre, usuario, rol) {
+    // Llenamos el modal con los datos actuales
+    document.getElementById('editUsuId').value = id;
+    document.getElementById('editUsuNombre').value = nombre;
+    document.getElementById('editUsuLogin').value = usuario;
+    document.getElementById('editUsuRol').value = rol;
+    document.getElementById('editUsuPass').value = ''; // Siempre en blanco por seguridad
+    
+    // Mostramos el modal
+    document.getElementById('modalEditarUsuario').style.display = 'flex';
+}
+
+function cerrarModalEditarUsuario() {
+    document.getElementById('modalEditarUsuario').style.display = 'none';
+    document.getElementById('formModalEditarUsuario').reset();
+}
+
+document.getElementById('formModalEditarUsuario').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const datos = {
+        id_usuario: document.getElementById('editUsuId').value,
+        nombre: document.getElementById('editUsuNombre').value,
+        usuario: document.getElementById('editUsuLogin').value,
+        rol: document.getElementById('editUsuRol').value,
+        password: document.getElementById('editUsuPass').value // Si está vacío, PHP no lo cambia
+    };
+
+    fetch('../php/editar_usuario.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("¡Usuario modificado exitosamente!");
+            cerrarModalEditarUsuario();
+            cargarUsuarios(); // Refrescar la tabla para ver los cambios
+        } else {
+            alert("Error: " + data.mensaje);
+        }
+    })
+    .catch(error => console.error("Error al editar usuario:", error));
+});
 
 // === USUARIO Y LOGOUT ===
 document.getElementById('sidebarUserName').innerText = localStorage.getItem('usuarioNombre') || 'Usuario';

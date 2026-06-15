@@ -418,6 +418,46 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
     </div>
 </div>
 
+<div id="modalEditarUsuario" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:8px; width:90%; max-width:500px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
+            <h3 style="color:#1a2b4c; margin:0;"><i class="fas fa-user-edit"></i> Modificar Usuario</h3>
+            <button onclick="cerrarModalEditarUsuario()" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <form id="formModalEditarUsuario">
+            <input type="hidden" id="editUsuId"> <div class="form-group" style="margin-bottom: 15px;">
+                <label>Nombre Completo</label>
+                <input type="text" id="editUsuNombre" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label>Correo / Usuario (Login)</label>
+                <input type="email" id="editUsuLogin" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Rol del Sistema</label>
+                    <select id="editUsuRol" required>
+                        <option value="Administrador">Administrador</option>
+                        <option value="Supervisor">Supervisor</option>
+                        <option value="Tecnico">Técnico</option>
+                        <option value="Secretaria">Secretaria</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Nueva Contraseña</label>
+                    <input type="text" id="editUsuPass" placeholder="Dejar en blanco para no cambiar">
+                </div>
+            </div>
+            
+            <div style="text-align: right; margin-top: 25px;">
+                <button type="submit" class="btn-primary" style="width: 100%; background-color: #f39c12;"><i class="fas fa-save"></i> Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="modalVerFotos" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); align-items:center; justify-content:center;">
     <div style="background:white; padding:25px; border-radius:8px; width:90%; max-width:800px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 85vh;">
         
