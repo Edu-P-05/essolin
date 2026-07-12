@@ -5,37 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESSOLIN - Iniciar Sesión</title>
     
+    <!-- Fuentes e íconos -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Tu CSS de pantalla dividida -->
     <link rel="stylesheet" href="../css/login.css">
+
+    <style>
+        /* Estilo para que tu caja de error se vea bien en el nuevo diseño */
+        #resultado {
+            display: none;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
 
-    <div class="login-card">
-        <div class="login-header">
-            <h1>ESSOLIN</h1>
-            <p>Gestión de Operaciones</p>
-        </div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <i class="fas fa-envelope"></i>
-                <input type="email" id="correo" class="form-control" placeholder="Correo electrónico" required>
+    <!-- ESTRUCTURA DEL DISEÑO MODERNO (PANTALLA DIVIDIDA) -->
+    <div class="login-wrapper">
+        
+        <!-- MITAD IZQUIERDA (Diseño Azul) -->
+        <div class="login-left">
+            <div class="logo">
+                <div class="logo-icon">E</div> ESSOLIN
             </div>
             
-            <div class="form-group">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="clave" class="form-control" placeholder="Contraseña" required>
+            <div class="brand-content">
+                <span class="kicker">CONTROL OPERATIVO DE CAMPO</span>
+                <h1>Una operación clara, desde el campo hasta el informe.</h1>
+                <p>Plataforma integral para gestionar trabajos, cuadrillas, evidencias fotográficas e informes de cierre.</p>
+                
+                <div class="badges">
+                    <span class="badge">Gestión Web</span>
+                    <span class="badge">Optimizado para celular</span>
+                </div>
             </div>
+        </div>
 
-            <button type="submit" class="btn-login">
-                Iniciar Sesión <i class="fas fa-sign-in-alt" style="margin-left: 5px;"></i>
-            </button>
+        <!-- MITAD DERECHA (Formulario) -->
+        <div class="login-right">
+            <div class="form-container">
+                <h2>Bienvenido a ESSOLIN</h2>
+                <p>Ingresa tus credenciales para acceder al sistema.</p>
 
-            <div id="resultado"></div>
-        </form>
+                <form id="loginForm">
+                    <div class="input-group">
+                        <label for="correo">Correo electrónico</label>
+                        <input type="email" id="correo" placeholder="ejemplo@essolin.pe" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="clave">Contraseña</label>
+                        <input type="password" id="clave" placeholder="••••••••" required>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        Iniciar Sesión <i class="fas fa-sign-in-alt" style="margin-left: 5px;"></i>
+                    </button>
+
+                    <!-- CAJA DE RESULTADO -->
+                    <div id="resultado"></div>
+                </form>
+            </div>
+        </div>
     </div>
 
+    <!-- SCRIPT DE JAVASCRIPT -->
     <script>
         // === LÓGICA DE INICIO DE SESIÓN ===
         document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -47,7 +89,8 @@
 
             cajaResultado.style.display = 'none';
 
-            fetch('../php/login.php', {
+            // AQUÍ ESTÁ EL ÚNICO CAMBIO: Ahora apunta al AuthController del patrón DAO
+            fetch('../Controlador/AuthController.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: email, password: password })
@@ -60,7 +103,7 @@
                 if(data.success) {
                     localStorage.setItem('usuarioNombre', data.nombre);
                     localStorage.setItem('usuarioRol', data.rol);
-                    window.location.href = "dashboard.php";
+                    window.location.href = "dashboard.php"; 
                 } else {
                     cajaResultado.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.mensaje}`;
                     cajaResultado.style.display = 'block';
@@ -68,7 +111,7 @@
             })
             .catch(error => {
                 console.error("Hubo un problema:", error);
-                cajaResultado.innerHTML = `<i class="fas fa-plug"></i> Error de conexión. Verifica que XAMPP esté encendido.`;
+                cajaResultado.innerHTML = `<i class="fas fa-plug"></i> Error de conexión. Verifica la ruta o el servidor.`;
                 cajaResultado.style.display = 'block';
             });
         });

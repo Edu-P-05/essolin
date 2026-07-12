@@ -479,10 +479,6 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="../js/Dashboard.js"></script>
-</body>
-</html>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="../js/Dashboard.js"></script>
 
 
 </body>

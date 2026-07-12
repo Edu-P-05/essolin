@@ -110,7 +110,8 @@ function cargarTrabajosAlMuro() {
     const tbody = document.querySelector('#tablaTrabajosPrincipal tbody');
     tbody.innerHTML = '<tr><td colspan="6">Cargando datos operativos...</td></tr>';
 
-    fetch('../php/listar_trabajos.php')
+    // NUEVA RUTA: Apuntamos al Controlador con la acción 'listar'
+    fetch('../Controlador/TrabajoController.php?accion=listar')
         .then(response => response.json())
         .then(result => {
             if (result.success) {
@@ -127,14 +128,12 @@ function cargarTrabajosAlMuro() {
                     else if (t.estado === 'Finalizado') estilosBadge = 'background: #d4edda; color: #155724;';
                     else estilosBadge = 'background: #e2e3e5; color: #383d41;';
 
-                    // --- INICIO DEL CANDADO LÓGICO ---
                     let atributoBloqueado = (t.estado === 'Finalizado') ? 'disabled' : '';
                     let cursorEstilo = (t.estado === 'Finalizado') ? 'cursor: not-allowed; opacity: 0.8;' : 'cursor: pointer;';
 
                     const opcionesEstado = ['Programado', 'En Proceso', 'Finalizado'];
                     
                     let selectHTML = `<select onchange="cambiarEstado(${t.id_trabajo}, this)" ${atributoBloqueado} style="${estilosBadge} border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; outline: none; ${cursorEstilo}">`;
-                    // --- FIN DEL CANDADO LÓGICO ---
                     
                     opcionesEstado.forEach(opcion => {
                         let seleccionado = (t.estado === opcion) ? 'selected' : '';
@@ -145,7 +144,8 @@ function cargarTrabajosAlMuro() {
                     tbody.innerHTML += `
                         <tr>
                             <td>${t.id_trabajo}</td>
-                            <td>${t.actividad}</td>
+                            <!-- CAMBIO AQUÍ: Usamos t.nombre_tipo como lo definimos en el Modelo -->
+                            <td>${t.nombre_tipo}</td> 
                             <td>${t.ubicacion}</td>
                             <td style="max-width: 250px; font-size: 0.85rem; color: #555;">${t.descripcion}</td>
                             <td>${selectHTML}</td>
@@ -173,10 +173,12 @@ function cargarTrabajosAlMuro() {
 // === ACTUALIZAR ESTADO DE UN TRABAJO ===
 function cambiarEstado(id_trabajo, selectElement) {
     const nuevoEstado = selectElement.value;
-    fetch('../php/actualizar_estado.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_trabajo: id_trabajo, estado: nuevoEstado })
+    
+    // NUEVA RUTA: Apuntamos al Controlador
+    fetch('../Controlador/TrabajoController.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accion: 'actualizar_estado', id_trabajo: id_trabajo, estado: nuevoEstado })
     })
     .then(response => response.json())
     .then(data => {
@@ -184,10 +186,10 @@ function cambiarEstado(id_trabajo, selectElement) {
             if (nuevoEstado === 'Programado') { selectElement.style.background = '#d1ecf1'; selectElement.style.color = '#0c5460'; } 
             else if (nuevoEstado === 'En Proceso') { selectElement.style.background = '#fff3cd'; selectElement.style.color = '#856404'; } 
             else if (nuevoEstado === 'Finalizado') { selectElement.style.background = '#d4edda'; selectElement.style.color = '#155724'; }
-            cargarDashboardInicio();
+            cargarDashboardInicio(); // Refrescar los gráficos
         } else {
             alert("Hubo un error al actualizar: " + data.mensaje);
-            cargarTrabajosAlMuro(); 
+            cargarTrabajosAlMuro(); // Revertir visualmente si falló
         }
     })
     .catch(error => console.error("Error de conexión:", error));
@@ -200,7 +202,7 @@ function verEvidenciasModal(id_trabajo) {
     const contenedor = document.getElementById('contenedorFotosModal');
     contenedor.innerHTML = '<p>Buscando evidencias...</p>';
 
-    fetch(`../php/obtener_evidencias_por_trabajo.php?id=${id_trabajo}`)
+    fetch(`../Controlador/EvidenciaController.php?accion=listar_por_trabajo&id=${id_trabajo}`)
         .then(response => response.json())
         .then(result => {
             if (result.success) {
@@ -244,14 +246,17 @@ function cerrarModalTrabajo() { document.getElementById('modalTrabajo').style.di
 document.getElementById('formModalNuevoTrabajo').addEventListener('submit', function(e) {
     e.preventDefault(); 
     const datos = {
+        accion: 'guardar', // NUEVA LÍNEA: Le decimos al controlador qué hacer
         id_tipo: document.getElementById('modalTipoActividad').value,
         id_cuadrilla: document.getElementById('modalCuadrilla').value,
         ubicacion: document.getElementById('modalUbicacion').value,
         descripcion: document.getElementById('modalDescripcion').value,
-        fecha_programada: document.getElementById('modalFechaProgramada').value, // <-- NUEVA LÍNEA
+        fecha_programada: document.getElementById('modalFechaProgramada').value,
         id_usuario: 1 
     };
-    fetch('../php/guardar_trabajo.php', { 
+    
+    // NUEVA RUTA: Apuntamos al Controlador
+    fetch('../Controlador/TrabajoController.php', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify(datos) 
@@ -263,18 +268,22 @@ document.getElementById('formModalNuevoTrabajo').addEventListener('submit', func
             cargarTrabajosAlMuro(); 
             cargarDashboardInicio(); 
         } else {
-            alert("Error: " + data.mensaje);
+            alert("Respuesta del servidor: " + data.mensaje);
         }
     });
 });
 
 // === EVIDENCIAS GENERALES ===
 function cargarSelectTrabajos() {
-    fetch('../php/listar_trabajos.php').then(r => r.json()).then(res => {
+    // NUEVA RUTA: Apuntamos al Controlador
+    fetch('../Controlador/TrabajoController.php?accion=listar').then(r => r.json()).then(res => {
         if(res.success) {
             const select = document.getElementById('selectTrabajoEvidencia');
             select.innerHTML = '<option value="">-- Seleccione un Trabajo --</option>';
-            res.data.forEach(t => select.innerHTML += `<option value="${t.id_trabajo}" data-actividad="${t.actividad}" data-ubicacion="${t.ubicacion}">ID: ${t.id_trabajo} - ${t.actividad}</option>`);
+            res.data.forEach(t => {
+                // CAMBIO AQUÍ: Usamos t.nombre_tipo
+                select.innerHTML += `<option value="${t.id_trabajo}" data-actividad="${t.nombre_tipo}" data-ubicacion="${t.ubicacion}">ID: ${t.id_trabajo} - ${t.nombre_tipo}</option>`;
+            });
         }
     });
 }
@@ -287,14 +296,14 @@ document.getElementById('selectTrabajoEvidencia').addEventListener('change', fun
 
 document.getElementById('formSubirEvidencia').addEventListener('submit', function(e) {
     e.preventDefault(); 
-    fetch('../php/subir_evidencia.php', { method: 'POST', body: new FormData(this) })
+    fetch('../Controlador/EvidenciaController.php?accion=subir', { method: 'POST', body: new FormData(this) })
     .then(r => r.json()).then(data => {
         if(data.success) { alert("¡Evidencia subida!"); this.reset(); cargarGaleriaEvidencias(); cargarDashboardInicio(); } 
     });
 });
 
 function cargarGaleriaEvidencias() {
-    fetch('../php/listar_evidencias.php').then(r => r.json()).then(res => {
+    fetch('../Controlador/EvidenciaController.php?accion=listar').then(r => r.json()).then(res => {
         if (res.success) {
             const gal = document.getElementById('galeriaEvidencias');
             gal.innerHTML = res.data.length ? '' : '<p>No hay evidencias.</p>';
@@ -597,10 +606,10 @@ function eliminarEvidencia(id_evidencia, ruta_archivo) {
         return;
     }
 
-    fetch('../php/eliminar_evidencia.php', {
+    fetch('../Controlador/EvidenciaController.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_evidencia: id_evidencia, ruta: ruta_archivo })
+        body: JSON.stringify({ accion: 'eliminar', id_evidencia: id_evidencia })
     })
     .then(response => response.json())
     .then(data => {
@@ -620,7 +629,7 @@ function cargarFotosRecientesDashboard() {
     const contenedor = document.getElementById('dashFotosRecientes');
     if (!contenedor) return;
 
-    fetch('../php/obtener_evidencias_recientes.php')
+    fetch('../Controlador/EvidenciaController.php?accion=listar_recientes')
         .then(response => response.json())
         .then(result => {
             if (result.success) {
