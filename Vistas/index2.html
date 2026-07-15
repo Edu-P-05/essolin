@@ -102,7 +102,9 @@
             .then(data => {
                 if(data.success) {
                     localStorage.setItem('usuarioNombre', data.nombre);
-                    localStorage.setItem('usuarioRol', data.rol);
+                    localStorage.setItem('usuarioRol', data.rol); // Nombre del rol
+                    localStorage.setItem('idRol', data.id_rol);   // ID numérico para comparar fácil
+                    localStorage.setItem('idCuadrilla', data.id_cuadrilla);
                     window.location.href = "dashboard.php"; 
                 } else {
                     cajaResultado.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.mensaje}`;

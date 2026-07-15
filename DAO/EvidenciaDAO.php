@@ -70,11 +70,5 @@ class EvidenciaDAO {
         return $this->mapearResultados($stmt->fetchAll(PDO::FETCH_ASSOC));
         
     }
-
-    public function eliminar($id_evidencia) {
-        $query = "DELETE FROM evidencias WHERE id_evidencia = ?";
-        $stmt = $this->conexion->prepare($query);
-        return $stmt->execute([$id_evidencia]);
-    }
 }
 ?>

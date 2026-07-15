@@ -13,9 +13,16 @@ header('Content-Type: application/json');
 
 switch ($accion) {
     case 'listar':
-        $evidencias = $evidenciaDAO->listarTodas();
+        $id_trabajo = $_GET['id_trabajo'] ?? 0;
+        
+        $evidencias = $evidenciaDAO->listarPorTrabajo($id_trabajo); 
+
+        if ($evidencias === null) {
+            $evidencias = []; 
+        }
+
         echo json_encode(["success" => true, "data" => $evidencias]);
-        break;
+    break;
 
     case 'listar_por_trabajo':
         $id = $_GET['id'] ?? 0;
@@ -29,6 +36,13 @@ switch ($accion) {
         break;
 
     case 'subir':
+        // Verificamos el rol antes de procesar cualquier archivo
+        if (isset($_SESSION['id_rol']) && $_SESSION['id_rol'] == 4) {
+            echo json_encode(["success" => false, "mensaje" => "Acceso denegado: No tienes permisos para subir evidencias."]);
+            exit;
+        }
+        // ----------------------------------------------------------------
+
         // 1. Validamos que la imagen llegó
         if (!isset($_FILES['foto']) || $_FILES['foto']['error'] != UPLOAD_ERR_OK) {
             echo json_encode(["success" => false, "mensaje" => "Error al recibir la imagen."]);
@@ -44,7 +58,7 @@ switch ($accion) {
         $evidencia = new Evidencia();
         $evidencia->id_trabajo = $id_trabajo;
         
-        // AQUÍ VA LA LÍNEA: Guardamos el binario crudo en el objeto
+        // Guardamos el binario crudo en el objeto
         $evidencia->ruta_archivo = $datosImagen; 
 
         // 4. Enviamos el objeto al DAO para que haga el INSERT en la BD
@@ -52,18 +66,6 @@ switch ($accion) {
             echo json_encode(["success" => true, "mensaje" => "Foto guardada en BD correctamente."]);
         } else {
             echo json_encode(["success" => false, "mensaje" => "Error en el DAO al guardar."]);
-        }
-        break;
-
-    case 'eliminar':
-        $id_evidencia = $datos['id_evidencia'] ?? 0;
-
-        // Como está en la BD, ya no necesitamos buscar carpetas ni usar unlink()
-        // Solo lanzamos la orden de eliminar el registro al DAO
-        if ($evidenciaDAO->eliminar($id_evidencia)) {
-            echo json_encode(["success" => true]);
-        } else {
-            echo json_encode(["success" => false, "mensaje" => "Error al eliminar de la BD"]);
         }
         break;
 

@@ -1,14 +1,10 @@
 <?php
-session_start(); // Inicia el motor de sesiones
+session_start();
 
-// Si el usuario no tiene su "gafete" de sesión iniciada, lo devolvemos al login
 if (!isset($_SESSION['usuario_logueado'])) {
     header("Location: index2.html");
     exit;
 }
-
-// Rescatamos el rol del usuario (1:Admin, 2:Supervisor, 3:Tecnico, 4:Secretaria)
-// Por defecto ponemos 1 temporalmente por si aún no configuras esto en el login
 $id_rol = $_SESSION['id_rol'] ?? 1; 
 ?>
 <!DOCTYPE html>
@@ -18,6 +14,8 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ESSOLIN - Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f4f7f6; color: #333; }
@@ -60,6 +58,135 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
         /* Estilo para los botones de descarga */
         .btn-download-img { display: inline-block; margin-top: 8px; background-color: #2c7da0; color: white; text-decoration: none; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; transition: 0.3s; width: 100%; }
         .btn-download-img:hover { background-color: #1f5c77; }
+        /* Estilos modernos para la tabla */
+        .tabla-moderna {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 15px;
+        }
+
+        .tabla-moderna thead th {
+            background-color: #f8f9fa;
+            color: #495057;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            padding: 15px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .tabla-moderna tbody td {
+            padding: 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f3f5;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .tabla-moderna tbody tr:hover {
+            background-color: #f8f9fc; /* Efecto sutil al pasar el mouse */
+        }
+
+        /* Diseño "Píldora" para el Select de Estado */
+        .select-pildora {
+            border-radius: 20px;
+            padding: 5px 15px;
+            font-size: 0.85rem;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            appearance: none; /* Oculta la flecha por defecto en algunos navegadores */
+            text-align: center;
+        }
+
+        /* Botón de acción minimalista */
+        .btn-accion-linea {
+            background: transparent;
+            color: #3498db;
+            border: 1px solid #3498db;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-accion-linea:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .modal-moderno {
+        background: white; 
+        padding: 25px; 
+        border-radius: 12px; 
+        width: 400px; 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        font-family: 'Segoe UI', sans-serif;
+        }
+        .input-moderno {
+            width: 100%; 
+            padding: 10px; 
+            margin-top: 5px; 
+            margin-bottom: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 6px; 
+            box-sizing: border-box;
+        }
+        .btn-save { background: #2563eb; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-save:hover { background: #1d4ed8; }
+        .scroll-box { height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 6px; margin-bottom: 15px; }
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-active { background-color: #d1fae5; color: #065f46; }
+        .badge-inactive { background-color: #fee2e2; color: #991b1b; }
+
+        .btn-toggle {
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-toggle:hover { opacity: 0.8; }
+        .btn-deactivate { background: #fee2e2; color: #dc2626; }
+        .btn-activate { background: #dcfce7; color: #15803d; }
+        @media print {
+            /* 1. Ocultamos toda la interfaz del dashboard */
+            body * {
+                visibility: hidden; /* Invisibilidad total */
+            }
+
+            /* 2. Hacemos visible SOLO el modal que queremos imprimir */
+            #modalDetalleTrabajo, 
+            #modalDetalleTrabajo * {
+                visibility: visible; /* Lo traemos a la luz */
+            }
+
+            /* 3. Posicionamos el modal al inicio de la hoja */
+            #modalDetalleTrabajo {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                display: block !important; /* Forzamos que se vea */
+            }
+
+            /* 4. Ocultamos botones específicos dentro del modal que no deben salir en el PDF */
+            .btn-upload, button { 
+                display: none !important; 
+            }
+        }
+</style>
     </style>
 </head>
 <body>
@@ -78,11 +205,18 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
 
                 <div class="nav-item <?php echo ($id_rol == 3) ? 'active' : ''; ?>" data-page="trabajos"><i class="fas fa-clipboard-list"></i> <span>Trabajos</span></div>
 
-                <?php if ($id_rol == 1 || $id_rol == 2 || $id_rol == 3): ?>
-                    <div class="nav-item" data-page="evidencias"><i class="fas fa-bolt"></i> <span>Evidencias</span></div>
+                <!-- === NUEVA SECCIÓN: CONTRATOS === -->
+                <?php if ($id_rol == 1 || $id_rol == 2 || $id_rol == 4): ?>
+                    <div class="nav-item" data-page="contratos"><i class="fas fa-file-signature"></i> <span>Contratos</span></div>
                 <?php endif; ?>
 
-                <?php if ($id_rol == 1 || $id_rol == 2 || $id_rol == 4): ?>
+                <!-- === NUEVA SECCIÓN: CUADRILLAS === -->
+                <!-- Asumimos que los técnicos de campo (3) no gestionan cuadrillas -->
+                <?php if ($id_rol == 1 || $id_rol == 2): ?>
+                    <div class="nav-item" data-page="cuadrillas"><i class="fas fa-users-cog"></i> <span>Cuadrillas</span></div>
+                <?php endif; ?>
+
+                <?php if ($id_rol == 1 || $id_rol == 4): ?>
                     <div class="nav-item" data-page="reportes"><i class="fas fa-chart-line"></i> <span>Reportes</span></div>
                 <?php endif; ?>
 
@@ -105,122 +239,250 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
                         echo $nombres_roles[$id_rol] ?? 'Rol no definido';
                     ?></span>
             </div>
-            <button id="logoutSidebarBtn" class="logout-sidebar"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+            <button type="button" class="logout-sidebar" onclick="window.location.href='../Controlador/UsuarioController.php?accion=logout';">
+                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+            </button>
         </div>
     </div>
 
     <div class="main-content">
         
         <div id="page-inicio" class="page-panel <?php echo ($id_rol != 3) ? 'active-panel' : ''; ?>">
-            <div class="page-title"><i class="fas fa-chart-simple"></i> Panel Principal ESSOLIN</div>
             
-            <div class="stats-grid">
-                <div class="stat-card" style="border-left: 5px solid #0c5460;">
-                    <div class="stat-number" id="dash-prog" style="color: #0c5460;">0</div>
-                    <div style="font-weight: bold; color: #555;">Programados</div>
-                </div>
-                <div class="stat-card" style="border-left: 5px solid #856404;">
-                    <div class="stat-number" id="dash-proc" style="color: #856404;">0</div>
-                    <div style="font-weight: bold; color: #555;">En Proceso</div>
-                </div>
-                <div class="stat-card" style="border-left: 5px solid #155724;">
-                    <div class="stat-number" id="dash-fin" style="color: #155724;">0</div>
-                    <div style="font-weight: bold; color: #555;">Finalizados</div>
-                </div>
-                <div class="stat-card" style="border-left: 5px solid #2c7da0;">
-                    <div class="stat-number" id="dash-tiempo" style="color: #2c7da0;">0d</div>
-                    <div style="font-weight: bold; color: #555;">Tiempo de Cierre</div>
-                </div>
-            </div>
+            <style>
+                .essolin-dashboard { padding: 10px 0; font-family: 'Segoe UI', Arial, sans-serif; }
+                .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 20px; }
+                .card { background: #ffffff; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; }
+                .col-span-1 { grid-column: span 1; }
+                .col-span-2 { grid-column: span 2; }
+                .col-span-4 { grid-column: span 4; }
+                .kpi-header { display: flex; justify-content: space-between; align-items: center; color: #64748b; font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+                .kpi-value { font-size: 32px; font-weight: bold; color: #1a2b4c; }
+                .kpi-trend { font-size: 13px; margin-top: 5px; }
+                .trend-up { color: #10b981; }
+                .trend-neutral { color: #8b5cf6; }
+                .section-title { color: #1e293b; font-size: 16px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+            </style>
 
-            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
-                <div class="module-card" style="flex: 1; min-width: 250px;">
-                    <h3 style="margin-bottom: 15px; color: #1a2b4c; text-align: center; font-size: 1.1rem;">Distribución de Estados</h3>
-                    <div style="position: relative; height:220px; width:100%; display: flex; justify-content: center;">
-                        <canvas id="graficoEstados"></canvas>
-                    </div>
-                </div>
-                <div class="module-card" style="flex: 1.2; min-width: 280px;">
-                    <h3 style="margin-bottom: 15px; color: #1a2b4c; font-size: 1.1rem;">Trabajos por Actividad</h3>
-                    <div style="position: relative; height:220px; width:100%;">
-                        <canvas id="graficoActividades"></canvas>
-                    </div>
-                </div>
-                <div class="module-card" style="flex: 1.2; min-width: 280px;">
-                    <h3 style="margin-bottom: 15px; color: #1a2b4c; font-size: 1.1rem;">Cierres por Cuadrilla</h3>
-                    <div style="position: relative; height:220px; width:100%;">
-                        <canvas id="graficoCuadrillas"></canvas>
-                    </div>
-                </div>
-            </div>
+            <div class="page-title"><i class="fas fa-chart-pie"></i> Panel Principal ESSOLIN</div>
 
-            <div class="module-card">
-                <h3 style="margin-bottom: 15px; color: #1a2b4c;"><i class="fas fa-camera-retro"></i> Últimas Evidencias Registradas</h3>
-                <div id="dashFotosRecientes" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;">
-                    <p style="color: #888; font-style: italic;">Cargando fotografías recientes...</p>
+            <div class="essolin-dashboard">
+                <!-- FILA 1: KPIs Principales -->
+                <div class="dashboard-grid">
+                    <div class="card col-span-1" style="border-left: 4px solid #3b82f6;">
+                        <div class="kpi-header"><span>Trabajos en Proceso</span><i class="fas fa-tools" style="color: #3b82f6;"></i></div>
+                        <div class="kpi-value" id="dash-proc">0</div> <!-- ID original mantenido -->
+                        <div class="kpi-trend trend-up"><i class="fas fa-clock"></i> Actividad operativa</div>
+                    </div>
+                    <div class="card col-span-1" style="border-left: 4px solid #10b981;">
+                        <div class="kpi-header"><span>Cuadrillas Libres</span><i class="fas fa-truck" style="color: #10b981;"></i></div>
+                        <div class="kpi-value" id="kpiCuadrillasLibres">0</div> <!-- Nuevo KPI -->
+                        <div class="kpi-trend trend-up"><i class="fas fa-check-circle"></i> Disponibles ahora</div>
+                    </div>
+                    <div class="card col-span-1" style="border-left: 4px solid #8b5cf6;">
+                        <div class="kpi-header"><span>Contratos Activos</span><i class="fas fa-file-signature" style="color: #8b5cf6;"></i></div>
+                        <div class="kpi-value" id="kpiContratosActivos">0</div> <!-- Nuevo KPI -->
+                        <div class="kpi-trend trend-neutral"><i class="fas fa-minus"></i> Vigentes</div>
+                    </div>
+                    <div class="card col-span-1" style="border-left: 4px solid #f59e0b;">
+                        <div class="kpi-header"><span>Trabajos Finalizados</span><i class="fas fa-flag-checkered" style="color: #f59e0b;"></i></div>
+                        <div class="kpi-value" id="dash-fin">0</div> <!-- ID original mantenido -->
+                        <div class="kpi-trend trend-up"><i class="fas fa-chart-line"></i> Este mes</div>
+                    </div>
+                </div>
+
+                <!-- FILA 2: Gráficos -->
+                <div class="dashboard-grid" style="grid-template-columns: repeat(3, 1fr);">
+                    <!-- Gráfico 1 -->
+                    <div class="card col-span-1">
+                        <div class="section-title">Distribución de Estados</div>
+                        <div style="position: relative; height: 250px; width: 100%; display: flex; justify-content: center;">
+                            <canvas id="graficoEstados"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráfico 2 -->
+                    <div class="card col-span-1">
+                        <div class="section-title">Trabajos por Actividad</div>
+                        <div style="position: relative; height: 250px; width: 100%; display: flex; justify-content: center;">
+                            <canvas id="graficoActividades"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Gráfico 3 (NUEVO) -->
+                    <div class="card col-span-1">
+                        <div class="section-title">Ranking por Cuadrilla</div>
+                        <div style="position: relative; height: 250px; width: 100%; display: flex; justify-content: center;">
+                            <canvas id="graficoCuadrillas"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FILA 3: Evidencias -->
+                <div class="dashboard-grid">
+                    <div class="card col-span-4">
+                        <div class="section-title"><i class="fas fa-camera-retro"></i> Últimas Evidencias Fotográficas</div>
+                        <div id="dashFotosRecientes" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px;"> <!-- ID original mantenido -->
+                            <p style="color: #94a3b8; font-style: italic;">Cargando registro fotográfico en tiempo real...</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
+        
         <div id="page-trabajos" class="page-panel <?php echo ($id_rol == 3) ? 'active-panel' : ''; ?>">
+            
             <div class="page-title" style="display: flex; justify-content: space-between; align-items: center;">
                 <div><i class="fas fa-briefcase"></i> Gestión de Trabajos</div>
-                <button onclick="abrirModalTrabajo()" class="btn-primary" style="background-color: #2c7da0;"><i class="fas fa-plus"></i> Nuevo Trabajo</button>
+                
+                <?php if ($_SESSION['id_rol'] == 1 || $_SESSION['id_rol'] == 4): ?>
+                    <button id="btnNuevoTrabajo" onclick="abrirModalNuevoTrabajo()" style="background-color: #00779e; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                        + Nuevo trabajo
+                    </button>
+                <?php endif; ?>
             </div>
+
+            <!-- === BARRA DE FILTROS === -->
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <div style="flex: 2;">
+                    <!-- onkeyup busca automáticamente mientras escribes -->
+                    <input type="text" id="inputBuscar" placeholder="🔍 Buscar por ID, elemento, ubicación..." onkeyup="cargarTablaTrabajos()" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+                <div style="flex: 1;">
+                    <!-- onchange actualiza al seleccionar -->
+                    <select id="selectEstado" onchange="cargarTablaTrabajos()" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="">Todos los Estados</option>
+                        <option value="Asignado">Programado</option>
+                        <option value="En Proceso">En Proceso</option>
+                        <option value="Finalizado">Finalizado</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <select id="selectTipo" onchange="cargarTablaTrabajos()" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="">Todos los Tipos</option>
+                        <option value="Poste">Poste</option>
+                        <option value="SCP">SCP</option>
+                        <option value="SE">SE</option>
+                        <option value="SAM">SAM</option>
+                    </select>
+                </div>
+            </div>
+            <!-- === FIN DE FILTROS === -->
+
+            <!-- === TABLA PRINCIPAL === -->
             <div class="module-card">
                 <div style="overflow-x:auto;">
                     <table id="tablaTrabajosPrincipal">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Actividad</th>
-                                <th>Ubicación</th>
-                                <th>Descripción</th>
+                                <th>ID / Elemento</th>
+                                <th>Ubicación y Detalles</th>
+                                <th>Tipo / Contrato</th>
+                                <th>Supervisor Asignado</th>
                                 <th>Estado</th>
-                                <th>Evidencias</th>
+                                <th>Acciones</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody id="tbodyTrabajos"></tbody>
                     </table>
                 </div>
             </div>
+            <!-- === FIN DE TABLA === -->
+
         </div>
 
-        <div id="page-evidencias" class="page-panel">
-            <div class="page-title"><i class="fas fa-bolt"></i> Evidencias de Campo</div>
-            <div class="module-card">
-                <h3 style="margin-bottom: 15px;"><i class="fas fa-upload"></i> Subir Nueva Evidencia</h3>
-                <form id="formSubirEvidencia" enctype="multipart/form-data">
-                    <div class="form-row">
-                        <div class="form-group" style="flex: 1;">
-                            <label>Seleccionar Trabajo (ID)</label>
-                            <select name="id_trabajo" id="selectTrabajoEvidencia" required>
-                                <option value="">Cargando trabajos...</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex: 2;">
-                            <label>Actividad Registrada</label>
-                            <input type="text" id="evidenciaActividad" placeholder="Se llenará automáticamente" readonly style="background-color: #e9ecef;">
-                        </div>
-                        <div class="form-group" style="flex: 2;">
-                            <label>Ubicación del Trabajo</label>
-                            <input type="text" id="evidenciaUbicacion" placeholder="Se llenará automáticamente" readonly style="background-color: #e9ecef;">
-                        </div>
+                <!-- === VISTA DE LISTADO DE CONTRATOS === -->
+        <div id="page-contratos" class="page-panel contenedor-principal" style="padding: 20px;">
+    
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2>Listado de Contratos</h2>
+                <!-- Botón para abrir el modal vacío (Nuevo Contrato) -->
+                <?php if ($_SESSION['id_rol'] == 1 || $_SESSION['id_rol'] == 4): ?>
+                    <button id="btnNuevoContrato" onclick="abrirModalContrato()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        + Nuevo Contrato
+                    </button>
+                <?php endif; ?>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse; background: white;">
+                <thead>
+                    <tr style="background: #f8fafc; text-align: left;">
+                        <th style="padding: 12px; border: 1px solid #e2e8f0;">Código Padre</th>
+                        <th style="padding: 12px; border: 1px solid #e2e8f0;">Descripción</th>
+                        <th style="padding: 12px; border: 1px solid #e2e8f0;">Estado</th>
+                        <th style="padding: 12px; border: 1px solid #e2e8f0;">Trabajos</th> <!-- Nueva columna -->
+                        <th style="padding: 12px; border: 1px solid #e2e8f0;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaContratosBody"></tbody>
+            </table>
+        </div>
+
+        <div id="modalContrato" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center;">
+            <div class="modal-moderno">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;">
+                    <h3 style="color:#1a2b4c; margin:0;">
+                        <i class="fas fa-file-signature"></i> Gestionar Contrato
+                    </h3>
+                    <button onclick="cerrarModalContrato()" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="formModalContrato">
+                    <input type="hidden" id="modalContratoId">
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="font-weight: bold; margin-bottom: 5px;">Código Padre:</label>
+                        <input type="text" id="modalCodigoPadre" class="input-moderno" placeholder="Ej. PLUZ-2026-000" required>
                     </div>
-                    <div class="form-row" style="align-items: flex-end; margin-top: 10px;">
-                        <div class="form-group" style="flex: 3;">
-                            <label>Seleccionar Fotografía</label>
-                            <input type="file" name="foto" accept="image/png, image/jpeg, image/jpg" required>
-                        </div>
-                        <div>
-                            <button type="submit" class="btn-primary"><i class="fas fa-cloud-upload-alt"></i> Subir Archivo</button>
-                        </div>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="font-weight: bold; margin-bottom: 5px;">Descripción:</label>
+                        <input type="text" id="modalDescripcion" class="input-moderno" placeholder="Detalle del contrato" required>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label style="font-weight: bold; margin-bottom: 5px;">Estado Inicial:</label>
+                        <select id="modalEstado" class="input-moderno">
+                            <option value="Activo">Activo</option>
+                            <option value="Inactivo">Inactivo</option>
+                        </select>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 25px;">
+                        <button type="button" onclick="guardarContrato()" class="btn-primary" style="width: 100%; padding: 12px; background: #2563eb;">
+                            <i class="fas fa-save"></i> Guardar Contrato
+                        </button>
                     </div>
                 </form>
             </div>
+        </div>
+
+        <!-- === VISTA DE CUADRILLAS === -->
+        <div id="page-cuadrillas" class="page-panel">
+            <div class="page-title" style="display: flex; justify-content: space-between; align-items: center;">
+                <div><i class="fas fa-users-cog"></i> Gestión de Cuadrillas</div>
+                <button onclick="abrirModalCuadrilla()" class="btn-primary" style="background-color: #2c7da0;">
+                    <i class="fas fa-plus"></i> Nueva Cuadrilla
+                </button>
+            </div>
+
             <div class="module-card">
-                <h3><i class="fas fa-images"></i> Galería de Fotos Recientes</h3>
-                <div id="galeriaEvidencias" style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 15px;"></div>
+                <div style="overflow-x:auto;">
+                    <table id="tablaCuadrillas" class="tabla-moderna">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Cuadrilla</th>
+                                <th>Supervisor (Jefe)</th>
+                                <th>Técnicos</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody><!-- Se llena con JS --></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -243,7 +505,7 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
                             <select id="filtroEstado">
                                 <option value="">Todos los estados</option>
                                 <option value="Pendientes">Todos los Pendientes (Programados / En Proceso)</option>
-                                <option value="Programado">Solo Programados</option>
+                                <option value="Asignado">Solo Programados</option>
                                 <option value="En Proceso">Solo En Proceso</option>
                                 <option value="Finalizado">Solo Finalizados</option>
                             </select>
@@ -294,7 +556,7 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
             
             <div class="module-card">
                 <div style="overflow-x:auto;">
-                    <table id="tablaUsuarios">
+                    <table id="tablaUsuarios" class="tabla-moderna">
                         <thead>
                             <tr>
                                 <th>ID</th>
@@ -315,70 +577,83 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
     </div>
 </div>
 
+<!-- === MODAL NUEVO TRABAJO === -->
 <div id="modalTrabajo" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:8px; width:90%; max-width:600px;">
-        <h3 style="margin-bottom:20px;"><i class="fas fa-plus-circle"></i> Registrar Trabajo en Campo</h3>
-        <form id="formModalNuevoTrabajo">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Tipo Actividad</label>
-                    <select id="modalTipoActividad" required>
-                        <option value="1">Mantenimiento Preventivo</option>
-                        <option value="2">Reparación de Avería</option>
-                        <option value="3">Instalación de Tableros</option>
-                        <option value="4">Diagnóstico de Fallas</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Cuadrilla Asignada</label>
-                    <select id="modalCuadrilla" required>
-                        <option value="1">Cuadrilla Alpha</option>
-                        <option value="2">Cuadrilla Beta</option>
-                        <option value="3">Cuadrilla Gamma</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group" style="flex: 2;">
-                    <label>Ubicación / Lugar</label>
-                    <input type="text" id="modalUbicacion" required>
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label>Fecha Programada</label>
-                    <input type="date" id="modalFechaProgramada" required>
-                </div>
-            </div>
-            <div class="form-group" style="margin-bottom: 20px; margin-top: 15px;">
-                <label>Descripción del Trabajo</label>
-                <textarea id="modalDescripcion" rows="3" required></textarea>
-            </div>
-            <div style="text-align: right; gap: 10px; display: flex; justify-content: flex-end;">
-                <button type="button" onclick="cerrarModalTrabajo()" class="btn-secondary">Cancelar</button>
-                <button type="submit" class="btn-primary">Guardar Registro</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div id="modalBitacora" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); align-items:center; justify-content:center;">
-    <div style="background:white; padding:25px; border-radius:8px; width:90%; max-width:600px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 85vh;">
+    <div style="background:white; padding:30px; border-radius:8px; width:90%; max-width:700px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0; color: #003954; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+            <i class="fas fa-hard-hat" style="color: #00779e;"></i> Registrar Nuevo Trabajo
+        </h3>
         
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
-            <h3 style="color:#1a2b4c;"><i class="fas fa-comments"></i> Bitácora del Trabajo ID: <span id="tituloModalBitacoraID"></span></h3>
-            <button onclick="cerrarModalBitacora()" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;"><i class="fas fa-times"></i></button>
-        </div>
+        <form id="formModalNuevoTrabajo" onsubmit="guardarNuevoTrabajo(event)">
+            <!-- Fila 1: Contrato y Tipo -->
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div style="flex: 1;">
+                    <!-- CÁMBIALO ASÍ: -->
+                    <label style="font-size: 0.85em; color: #555; font-weight: bold;">Contrato Pluz Asociado</label>
+                    <select id="selectContratoTrabajo" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="">Cargando contratos...</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 0.85em; color: #555; font-weight: bold;">Tipo de Infraestructura</label>
+                    <select id="modalTipo" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="Poste">Poste</option>
+                        <option value="SCP">Subestación Compacta Pedestal (SCP)</option>
+                        <option value="SE">Subestación Convencional (SE)</option>
+                        <option value="SAM">Subestación Aérea Monoposte (SAM)</option>
+                    </select>
+                </div>
+            </div>
 
-        <div id="contenedorComentarios" style="flex: 1; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 6px; border: 1px solid #ddd; margin-bottom: 15px; min-height: 200px;">
-            <p style="color: #888; text-align: center; font-style: italic;">Cargando historial...</p>
-        </div>
+            <!-- Fila 2: Elemento y Prioridad -->
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 0.85em; color: #555; font-weight: bold;">Código del Elemento (Ej. POSTE-123)</label>
+                    <input type="text" id="modalElemento" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-transform: uppercase;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 0.85em; color: #555; font-weight: bold;">Prioridad</label>
+                    <select id="modalPrioridad" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="Alta">Alta</option>
+                        <option value="Media" selected>Media</option>
+                        <option value="Baja">Baja</option>
+                    </select>
+                </div>
+            </div>
 
-        <form id="formNuevoComentario" style="display: flex; flex-direction: column; gap: 10px;">
-            <input type="hidden" id="inputBitacoraIdTrabajo">
-            <textarea id="textoNuevoComentario" rows="2" placeholder="Escribe un avance, incidente o nota aquí..." required style="padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: none;"></textarea>
-            <button type="submit" class="btn-primary" style="background-color: #2c7da0; align-self: flex-end;"><i class="fas fa-paper-plane"></i> Agregar Nota</button>
+            <!-- Fila 3: Ubicación -->
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85em; color: #555; font-weight: bold;">Ubicación / Dirección exacta</label>
+                <input type="text" id="modalUbicacion" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            <!-- Fila Extra: Descripción -->
+            <div style="margin-bottom: 15px;">
+                <label style="font-size: 0.85em; color: #555; font-weight: bold;">Descripción del Trabajo</label>
+                <textarea id="modalDescripcion" required rows="3" placeholder="Detalle las tareas exactas a realizar..." style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; resize: vertical;"></textarea>
+            </div>
+            <!-- Fila 4: Supervisor y Fecha -->
+            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                <div style="flex: 2;">
+                    <label style="font-size: 0.85em; color: #555; font-weight: bold;">Asignar a Supervisor</label>
+                    <select id="modalSupervisor" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                        <option value="">Cargando supervisores...</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 0.85em; color: #555; font-weight: bold;">Fecha Programada</label>
+                    <input type="date" id="modalFechaProgramada" required style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                </div>
+            </div>
+
+            <!-- Botones -->
+            <div style="text-align: right; margin-top: 25px; border-top: 1px solid #eee; padding-top: 15px;">
+                <button type="button" onclick="cerrarModalTrabajo()" style="background: white; color: #555; border: 1px solid #ccc; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-right: 10px;">Cancelar</button>
+                <button type="submit" style="background: #00779e; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">Asignar Trabajo</button>
+            </div>
         </form>
     </div>
 </div>
+
 
 <div id="modalUsuario" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); align-items:center; justify-content:center;">
     <div style="background:white; padding:30px; border-radius:8px; width:90%; max-width:500px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
@@ -405,14 +680,16 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
             <div class="form-group" style="margin-top: 15px;">
                 <label>Rol del Sistema</label>
                 <select id="modalUsuRol" required>
-                    <option value="Administrador">Administrador</option>
-                    <option value="Supervisor">Supervisor</option>
-                    <option value="Tecnico">Técnico</option>
-                    <option value="Secretaria">Secretaria</option>
+                        <option value="1">Administrador</option>
+                        <option value="2">Supervisor</option>
+                        <option value="3">Técnico</option>
+                        <option value="4">Secretaria</option>
                 </select>
             </div>
             <div style="text-align: right; margin-top: 25px;">
-                <button type="submit" class="btn-primary" style="width: 100%;"><i class="fas fa-save"></i> Guardar Usuario</button>
+                <button type="button" onclick="guardarNuevoUsuario()" class="btn-primary" style="width: 100%;">
+                    <i class="fas fa-save"></i> Guardar Usuario
+                </button>
             </div>
         </form>
     </div>
@@ -439,10 +716,10 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
                 <div class="form-group">
                     <label>Rol del Sistema</label>
                     <select id="editUsuRol" required>
-                        <option value="Administrador">Administrador</option>
-                        <option value="Supervisor">Supervisor</option>
-                        <option value="Tecnico">Técnico</option>
-                        <option value="Secretaria">Secretaria</option>
+                        <option value="1">Administrador</option>
+                        <option value="2">Supervisor</option>
+                        <option value="3">Técnico</option>
+                        <option value="4">Secretaria</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -458,28 +735,130 @@ $id_rol = $_SESSION['id_rol'] ?? 1;
     </div>
 </div>
 
-<div id="modalVerFotos" style="display:none; position:fixed; z-index:100; left:0; top:0; width:100%; height:100%; background-color: rgba(0,0,0,0.6); align-items:center; justify-content:center;">
-    <div style="background:white; padding:25px; border-radius:8px; width:90%; max-width:800px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; flex-direction: column; max-height: 85vh;">
+<div id="modalDetalleTrabajo" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1050; justify-content: center; align-items: center;">
+    <div style="background: white; width: 700px; max-height: 90vh; border-radius: 8px; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+        <!-- Datos ocultos para que el reporte los pueda leer -->
+        <div id="datosReporteOcultos" style="display:none;">
+            <span id="repCodigoTrabajo"></span>
+            <span id="repIdTrabajo"></span>
+            <span id="repIdTipo"></span>
+            <span id="repPrioridad"></span>
+            <span id="repUsuario"></span>
+            <span id="repFechaProg"></span>
+            <span id="repFechaFin"></span>
+        </div>
+        <div style="background: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: #00779e;">Detalle de Trabajo: <span id="detIdTrabajo"></span></h3>
+            
+            <!-- Contenedor para alinear los botones -->
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- Botón de cerrar -->
+                <button onclick="cerrarModalDetalle()" style="background: none; border: none; font-size: 1.5em; cursor: pointer;">&times;</button>
+            </div>
+        </div>
         
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
-            <h3 style="color:#1a2b4c;"><i class="fas fa-camera"></i> Evidencias Fotográficas - Trabajo ID: <span id="tituloModalFotosID"></span></h3>
-            <button onclick="document.getElementById('modalVerFotos').style.display='none'" style="background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;"><i class="fas fa-times"></i></button>
+        <!-- Agrega esto dentro de tu modalDetalleTrabajo -->
+        <div class="seccion-asignacion" style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 15px; border: 1px solid #dee2e6;">
+            <strong style="display: block; margin-bottom: 8px;"><i class="fas fa-users"></i> Asignar o Cambiar Cuadrilla:</strong>
+            <div style="display: flex; gap: 10px;">
+                <select id="selectAsignarCuadrilla" class="form-control" style="flex: 1; padding: 6px; border-radius: 4px; border: 1px solid #ccc;">
+                    <option value="">Sin cuadrilla asignada...</option>
+                    <?php
+                        // Consultamos las cuadrillas disponibles directamente
+                        require_once '../php/conexion.php'; // Asegúrate de que la ruta sea correcta
+                        $pdoModal = getConexion();
+                        $stmtC = $pdoModal->query("SELECT id_cuadrilla, nombre_cuadrilla FROM cuadrillas");
+                        while($c = $stmtC->fetch(PDO::FETCH_ASSOC)) {
+                            echo "<option value='{$c['id_cuadrilla']}'>{$c['nombre_cuadrilla']}</option>";
+                        }
+                    ?>
+                </select>
+                
+                <button onclick="guardarAsignacionCuadrilla()" style="background: #28a745; color: white; border: none; padding: 6px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    <i class="fas fa-save"></i> Guardar
+                </button>
+            </div>
         </div>
 
-        <div id="contenedorFotosModal" style="display: flex; gap: 15px; flex-wrap: wrap; overflow-y: auto; padding: 10px; justify-content: center; background: #f8f9fa; border-radius: 6px; border: 1px solid #ddd; min-height: 200px;">
-            <p style="color: #888; font-style: italic;">Buscando evidencias...</p>
+        <!-- Info Principal -->
+        <div style="padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-bottom: 2px solid #f0f0f0;">
+            <div><strong>Elemento:</strong> <span id="detElemento"></span></div>
+            <div><strong>Ubicación:</strong> <span id="detUbicacion"></span></div>
+            <div><strong>Supervisor:</strong> <span id="detSupervisor"></span></div>
+            <div><strong>Estado:</strong> <span id="detEstado"></span></div>
         </div>
-        
+
+        <!-- Cuerpo: Integración de Bitácora y Fotos -->
+        <div style="padding: 20px;">
+            <div style="display: flex; gap: 20px;">
+                <!-- Columna Bitácora -->
+                <div style="flex: 1;">
+                    <h4 style="margin-top:0; color: #333;">📋 Bitácora (Comentarios)</h4>
+                    
+                    <!-- Historial de comentarios -->
+                    <div id="contenedorComentarios" style="background: #f9f9f9; padding: 10px; border-radius: 5px; height: 180px; overflow-y: auto; font-size: 0.85em; margin-bottom: 10px;">
+                        <!-- Aquí se cargarán los comentarios -->
+                    </div>
+
+                    <!-- Formulario para agregar nuevo comentario -->
+                    <!-- Cambia tu etiqueta form por esta -->
+                        <form id="formNuevoComentario" onsubmit="return false;" style="display: flex; gap: 5px;">
+                            <input type="hidden" id="inputBitacoraIdTrabajo" value="">
+                            <!-- REVISA QUE ESTÉ ESCRITO ASÍ: -->
+                            <textarea id="textoNuevoComentario" placeholder="Escribe un comentario..." style="flex: 1; padding: 5px; border: 1px solid #ccc; border-radius: 4px; resize: none; height: 40px;"></textarea>
+                            <!-- Asegúrate de que el botón diga type="button" para que no intente enviar el form -->
+                            <button type="button" onclick="guardarComentarioBitacora()" style="background: #00779e; color: white; border: none; padding: 0 10px; border-radius: 4px; cursor: pointer;">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+            </div>
+                <!-- Columna Evidencias -->
+                <div style="flex: 1;">
+                    <h4 style="margin-top:0; color: #333;">📸 Evidencias (Fotos)</h4>
+                    
+                    <!-- ✅ AÑADIMOS EL ID AQUÍ PARA CONTROLARLO POR JS -->
+                    <div id="seccionSubidaEvidencias" style="margin-bottom: 10px; padding: 10px; border: 1px dashed #ccc; border-radius: 4px; background: #fafafa;">
+                        <input type="file" id="inputSubirFoto" accept="image/*" style="font-size: 0.8em; width: 100%;">
+                        <button onclick="subirEvidencia()" style="margin-top: 5px; width: 100%; background: #27ae60; color: white; border: none; padding: 5px; border-radius: 4px; cursor: pointer;">
+                            <i class="fas fa-upload"></i> Subir Foto
+                        </button>
+                    </div>
+
+                    <div id="contenedorFotos" style="background: #f9f9f9; padding: 10px; border-radius: 5px; height: 180px; overflow-y: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px;">
+                        <!-- Aquí se cargan las fotos -->
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
+<div id="modalCuadrilla" class="modal" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000;">
+    <div class="modal-moderno">
+        <h3 style="margin-top:0; color: #1e293b;">Gestionar Cuadrilla</h3>
+        <form id="formModalCuadrilla">
+            <input type="hidden" id="modalCuadrillaId">
+            
+            <label>Nombre de la Cuadrilla:</label>
+            <input type="text" id="modalCuadrillaNombre" class="input-moderno" placeholder="Ej. Cuadrilla Alpha" required>
+            
+            <label>Supervisor:</label>
+            <select id="modalCuadrillaSupervisor" class="input-moderno" required>
+                <option value="">-- Seleccione un supervisor --</option>
+            </select>
+            
+            <label>Técnicos (Obligatorio seleccionar al menos 1):</label>
+            <div id="listaTecnicos" class="scroll-box"></div>
+
+            <button type="button" onclick="validarYGuardar()" class="btn-save">Guardar Cambios</button>
+            <button type="button" onclick="cerrarModalCuadrilla()" style="background: none; border: none; color: #64748b; width: 100%; margin-top: 10px; cursor: pointer;">Cancelar</button>
+        </form>
+    </div>
+</div>
 <script>
     const ID_ROL_ACTUAL = <?php echo $id_rol; ?>;
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="../js/Dashboard.js"></script>
-
-
 </body>
 </html>
